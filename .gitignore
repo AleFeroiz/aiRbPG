@@ -1,0 +1,28 @@
+# Visual Studio / .NET
+.vs/
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.pdb
+*.dll
+*.exe
+
+# Configuração local e segredos
+appsettings.Local.json
+*.local.json
+.env
+.env.*
+!.env.example
+
+# Sistema operacional e editores
+.DS_Store
+Thumbs.db
+*.swp
+*.swn
+
+# Arquivos locais de banco e backups
+*.mdf
+*.ldf
+*.bak
