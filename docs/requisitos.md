@@ -88,4 +88,13 @@ Fórmula inicial para aprovação: `total = horas × tarifaHoráriaDoEspaço + h
 - Criação de reserva com validação de conflito de horário, estoque e capacidade.
 - Cálculo do valor e consulta de reservas.
 
+## Estado atual da implementação
+
+- Solução .NET com projetos `aiRbPG.Domain`, `aiRbPG.Data` e `aiRbPG.WinForms`.
+- Login com criação inicial de Administrador e armazenamento de senha com PBKDF2; cadastros básicos com inativação lógica.
+- Script SQL Server inicial com dados de demonstração.
+- Cadastro de reserva e consulta da lista, com validação transacional do conflito de espaço, capacidade e estoque dos acessórios.
+- A fórmula de cobrança implementada é uma estimativa provisória (espaço por hora + participante/hora opcional + acessório por hora). O grupo ainda deve aprovar a política comercial.
+- Ainda faltam validação em execução no Windows, pagamentos, alteração/cancelamento, retirada/devolução e relatórios.
+
 Os diagramas UML iniciais estão em [`uml/casos-de-uso.puml`](uml/casos-de-uso.puml) e [`uml/classes.puml`](uml/classes.puml). São fontes editáveis; confirmar e exportar imagens/PDF para a entrega final.

@@ -1,4 +1,4 @@
-# Modelo conceitual de dados
+# Modelo de dados
 
 Rascunho baseado no resumo do grupo; deve ser validado antes do script físico. O modelo inclui entidades adicionais sugeridas para representar os fluxos de cobrança e devolução já previstos nos requisitos.
 
@@ -38,13 +38,13 @@ Autenticação e autorização dos funcionários.
 ### Acessorio
 
 - `AcessorioId` — chave primária.
-- `SistemaRpgId` — referência opcional/obrigatória ao sistema compatível; confirmar se um acessório pode ser compartilhado por vários sistemas.
-- `Nome`, `Descricao`, `QuantidadeEstoque`, `Tarifa`, `Ativo`.
+- `Nome`, `Descricao`, `QuantidadeEstoque`, `TarifaHora`, `Ativo`.
+- Sistemas compatíveis são associados pela tabela `SistemasAcessorios`, permitindo que um item sirva a mais de um sistema.
 - Quantidade disponível não deve ser negativa; tarifa não negativa.
 
 ### Kit e ItemKit (opcional)
 
-`Kit` contém `KitId`, nome, descrição, tarifa opcional e ativo. `ItemKit` associa kit e acessório com quantidade. A associação permite reutilizar o mesmo acessório em vários kits.
+`Kit` contém `KitId`, nome, descrição e ativo. `ItemKit` associa kit e acessório com quantidade. A associação permite reutilizar o mesmo acessório em vários kits. A funcionalidade de kits continua opcional.
 
 ### Reserva
 
@@ -60,7 +60,7 @@ Autenticação e autorização dos funcionários.
 
 Associa acessórios à reserva. Campos sugeridos: `ItemReservaId`, `ReservaId`, `AcessorioId`, quantidade, tarifa unitária acordada, quantidades retiradas/devolvidas e quantidades danificadas/perdidas. A regra de estoque deve considerar o período e a situação das reservas.
 
-### Pagamento (sugerido)
+### Pagamento
 
 Registra pagamentos manuais associados à reserva: `PagamentoId`, `ReservaId`, valor, data/hora, método, observação e usuário que registrou. Permite mais de um pagamento por reserva e consulta do saldo, se o grupo decidir suportar pagamentos parciais.
 
@@ -69,9 +69,10 @@ Registra pagamentos manuais associados à reserva: `PagamentoId`, `ReservaId`, v
 ```text
 Cliente 1 ─── N Reserva N ─── 1 Espaco
 Usuario 1 ─── N Reserva
-Reserva 1 ─── N ItemReserva N ─── 1 Acessorio N ─── 1 SistemaRpg
+Reserva 1 ─── N ItemReserva N ─── 1 Acessorio
+SistemaRpg N ─── N Acessorio (via SistemasAcessorios)
 Kit 1 ─── N ItemKit N ─── 1 Acessorio        (opcional)
-Reserva 1 ─── N Pagamento                    (proposto)
+Reserva 1 ─── N Pagamento
 ```
 
 ## Integridade e concorrência
@@ -83,7 +84,11 @@ Reserva 1 ─── N Pagamento                    (proposto)
 - O valor histórico da reserva deve guardar tarifas aplicadas no momento do acordo; mudanças futuras na tarifa não alteram reservas antigas.
 - Consultas e gravações precisam respeitar o perfil do usuário; a regra de autorização também deve ser aplicada fora da interface, no fluxo de negócio.
 
-## Pontos a decidir antes do SQL físico
+## Implementação física inicial
+
+O script [`../database/scripts/001_create_database.sql`](../database/scripts/001_create_database.sql) cria a estrutura SQL Server inicial, índices para consultas por período e dados de demonstração. A entidade `Espaco` tem tarifa horária e tarifa opcional por pessoa/hora. O preço dos acessórios é armazenado por hora. As tarifas aplicadas são copiadas para Reserva e ItemReserva para preservar o histórico. A cobrança ainda é uma proposta a aprovar pelo grupo.
+
+## Pontos a decidir antes de fechar o modelo
 
 1. Unidade de cobrança de cada espaço e acessório e política de arredondamento.
 2. Status e quais deles bloqueiam disponibilidade.

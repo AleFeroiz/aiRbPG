@@ -11,7 +11,8 @@ enum StatusReserva {
   Confirmada
   Cancelada
   EmAndamento
-  Devolvida
+  AguardandoDevolucao
+  Finalizada
 }
 
 class Usuario {
@@ -36,7 +37,8 @@ class Espaco {
   +string Nome
   +string Endereco
   +int Capacidade
-  +decimal Tarifa
+  +decimal TarifaHora
+  +decimal TarifaPessoaHora
   +bool Ativo
 }
 
@@ -47,18 +49,23 @@ class SistemaRpg {
   +bool Ativo
 }
 
+class SistemasAcessorios {
+  +int SistemaRpgId
+  +int AcessorioId
+}
+
 class Acessorio {
   +int AcessorioId
   +string Nome
   +int QuantidadeEstoque
-  +decimal Tarifa
+  +decimal TarifaHora
   +bool Ativo
 }
 
 class Kit {
   +int KitId
   +string Nome
-  +decimal Tarifa
+  +string Descricao
   +bool Ativo
 }
 
@@ -74,7 +81,11 @@ class Reserva {
   +DateTime Fim
   +int NumeroParticipantes
   +StatusReserva Status
-  +decimal ValorEspaco
+  +decimal Horas
+  +decimal TarifaEspacoHoraAplicada
+  +decimal TarifaPessoaHoraAplicada
+  +decimal SubtotalEspaco
+  +decimal SubtotalPessoas
   +decimal Desconto
   +decimal Multas
   +decimal ValorTotal
@@ -89,7 +100,8 @@ class ItemReserva {
   +int QuantidadeDevolvida
   +int QuantidadeDanificada
   +int QuantidadePerdida
-  +decimal TarifaUnitária
+  +decimal TarifaHoraAplicada
+  +decimal Subtotal
 }
 
 class Pagamento {
@@ -107,7 +119,8 @@ Espaco "1" -- "0..*" Reserva
 Usuario "1" -- "0..*" Reserva : registra
 Reserva "1" *-- "0..*" ItemReserva
 Acessorio "1" -- "0..*" ItemReserva
-SistemaRpg "1" -- "0..*" Acessorio
+SistemaRpg "1" -- "0..*" SistemasAcessorios
+Acessorio "1" -- "0..*" SistemasAcessorios
 Kit "1" *-- "1..*" ItemKit
 Acessorio "1" -- "0..*" ItemKit
 Reserva "1" *-- "0..*" Pagamento
@@ -116,14 +129,16 @@ note right of Reserva
   Fim deve ser posterior ao início.
   Não há conflito de espaço ou estoque
   entre reservas que bloqueiam agenda.
-  O total segue: espaço + acessórios
-  + multas - descontos.
+  Estimativa atual: espaço por hora,
+  pessoa por hora e acessórios por hora,
+  além de multas e descontos.
+  Fórmula pendente de aprovação do grupo.
 end note
 
-note bottom of Acessorio
-  Relacionamento com SistemaRpg aparece
-  1:N como hipótese inicial; confirmar se
-  acessórios servem a múltiplos sistemas.
+note bottom of SistemasAcessorios
+  Associação N:N deixa o catálogo livre
+  para vincular um acessório a vários
+  sistemas de RPG.
 end note
 
 @enduml

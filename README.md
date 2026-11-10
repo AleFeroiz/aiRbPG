@@ -19,4 +19,15 @@ Integrantes: Alessandro Silva Vieira, Felipe Gabriel Leite Moreira e Mayzon Reze
 
 ## Situação
 
-Preparação e modelagem. O SDK .NET 10 está instalado no notebook Linux; como o professor não exigiu uma versão específica, ele é a opção atual de trabalho, sujeito à compatibilidade com o Visual Studio disponível na máquina Windows. Formulários WinForms precisam ser abertos e demonstrados em Windows. Ainda não há código de aplicação nem banco implementado. Definir em qual máquina/servidor ficará a instância SQL Server.
+O projeto já tem uma solução C# com camadas de domínio, acesso a dados e Windows Forms, além do script inicial do SQL Server. Foram iniciados login, cadastro de clientes/espaços/sistemas/acessórios e criação de reservas com validação de agenda, capacidade e estoque. A aplicação WinForms precisa ser compilada, executada e validada em um computador Windows; este notebook Linux serve para preparar o código e a documentação.
+
+## Abrir e configurar no Windows
+
+1. Instale o SDK .NET 10 e o Visual Studio compatível com desenvolvimento desktop .NET, ou use o SDK pela linha de comando.
+2. Abra `aiRbPG.sln` no Windows.
+3. Instale/configure uma instância SQL Server no computador Windows que será o servidor do banco. A instância pode ser SQL Server Express para desenvolvimento local.
+4. Execute [`database/scripts/001_create_database.sql`](database/scripts/001_create_database.sql) no SQL Server Management Studio ou `sqlcmd`.
+5. Configure `AIRBPG_SQL_CONNECTION` conforme [`database/README.md`](database/README.md).
+6. Inicie `src/aiRbPG.WinForms`. No primeiro acesso, o aplicativo solicita a criação do administrador inicial.
+
+Ainda falta confirmar a fórmula comercial de cobrança, completar alteração/cancelamento, pagamentos, retirada/devolução e relatórios, e validar o sistema no Windows com o SQL Server escolhido.
