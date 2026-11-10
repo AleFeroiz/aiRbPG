@@ -17,7 +17,7 @@ Documento inicial a partir do resumo fornecido pelo grupo. As regras e prioridad
 
 ## Requisitos funcionais
 
-Prioridade **Alta** indica o MVP planejado para a demonstração. As prioridades não informadas ficam para validação do grupo.
+Prioridade **Alta** indica o MVP planejado pelo grupo. As marcações Média/Baixa são sugestões iniciais para organizar o restante do escopo e devem ser confirmadas pelos integrantes e pelo professor.
 
 | ID | Requisito | Prioridade |
 |---|---|---|
