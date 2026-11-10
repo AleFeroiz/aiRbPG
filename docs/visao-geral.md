@@ -1,35 +1,35 @@
-# Visão geral do projeto
+# Visão geral do projeto — Airbnb de RPG
 
 ## Contexto da disciplina
 
-O plano de ensino de Linguagem de Programação VIII (2026) descreve o desenvolvimento de aplicações em C#, acesso a SQL Server pelo Visual Studio e uso de formulários Windows. Também menciona variáveis, operadores, estruturas de controle, funções e procedimentos, arrays, menus, controles, depuração e geração de aplicações. O plano informa os temas e ferramentas da disciplina; ele não prescreve o tema nem os requisitos deste produto.
+O plano de ensino de Linguagem de Programação VIII (2026) descreve o desenvolvimento de aplicações em C#, acesso a SQL Server pelo Visual Studio e uso de formulários Windows. Também menciona variáveis, operadores, estruturas de controle, funções e procedimentos, arrays, menus, controles, depuração e geração de aplicações. O plano informa os temas e ferramentas da disciplina; o tema, os perfis e os requisitos deste produto vêm do grupo.
 
 ## Problema e proposta
 
-Um espaço voltado a RPG de mesa pode ter salas ou mesas com capacidades e recursos diferentes. A equipe precisa saber quais ambientes estão disponíveis em cada período, registrar locações e consultar os dados de clientes e reservas.
+O “Airbnb de RPG” permite que um cliente alugue um espaço adequado à sua sessão e reserve acessórios compatíveis com o sistema de RPG escolhido. Os espaços podem incluir casas, galpões ou cômodos; os itens podem incluir livros, miniaturas, fantasias e dados.
 
-O sistema será um aplicativo administrativo para cadastrar clientes e ambientes, organizar a agenda de locações e evitar que o mesmo ambiente seja reservado em horários sobrepostos.
+O sistema será um aplicativo administrativo para cadastrar clientes, espaços, sistemas de RPG e acessórios; organizar reservas de espaço e itens; controlar retirada, devolução, pagamento e multas; e evitar conflitos de agenda e estoque.
 
 ## Usuários
 
-- Funcionário ou administrador do espaço, responsável por manter cadastros e operar a agenda.
-- Cliente, registrado no sistema pelo funcionário para associá-lo a uma locação. Portal ou autoatendimento do cliente ficam fora do escopo inicial.
+- Administrador, que gerencia cadastros e tarifas e consulta todas as operações, inclusive faturamento.
+- Atendente, que opera reservas, pagamentos manuais, retiradas e devoluções.
+- Cliente, registrado por um funcionário e associado à reserva; não acessa o sistema.
 
 ## Objetivo da primeira versão
 
-Entregar um fluxo demonstrável de cadastro de clientes e ambientes, consulta da disponibilidade e criação, edição, cancelamento e consulta de reservas, com dados guardados no SQL Server.
+Entregar para a P2 de 24/11/2026 um fluxo demonstrável de login/permissões, cadastros essenciais, disponibilidade de espaços e acessórios, criação de reserva com validação de horário/estoque/capacidade, cálculo do valor e consulta de reservas, com dados guardados no SQL Server. O grupo tem até três integrantes.
 
 ## Limites do escopo inicial
 
-Incluído: cadastro básico, agenda por data/horário, preço informado ou calculado segundo uma regra simples definida pelo grupo, situação da reserva e prevenção de conflito de horários.
+Incluído no escopo do produto: login e perfis, cadastro de clientes/espaços/sistemas/acessórios, reserva de espaço e acessórios, cálculo de preço, retirada/devolução, pagamentos manuais, multas, consultas e relatórios. O MVP para a demonstração prioriza login, cadastros, reserva com validação de horário e estoque, cálculo de valor e consulta.
 
-Fora do escopo até decisão do grupo: pagamentos online, emissão fiscal, autenticação e perfis avançados, portal público, campanhas/personagens, estoque de produtos, integração com calendário externo e múltiplas filiais.
+Fora do escopo inicial: acesso de cliente, pagamentos online, emissão fiscal, integração com calendário externo, campanhas/personagens e múltiplas filiais. Kits temáticos são opcionais.
 
 ## Premissas a validar
 
-- Uma reserva ocupa um único ambiente em uma data e intervalo de horário.
-- O horário de término deve ser posterior ao de início.
-- Reservas canceladas não bloqueiam disponibilidade.
-- Reservas confirmadas ou pendentes bloqueiam horários, salvo regra diferente aprovada pelo grupo.
-- O grupo definirá se o preço é por hora, por período fixo ou inserido manualmente.
-- O grupo e o professor confirmarão versão do .NET, edição do SQL Server e requisitos de entrega/demonstração.
+- Uma reserva está associada a um cliente e a um espaço, além de poder conter itens/acessórios.
+- O grupo precisa fechar os status e as regras de bloqueio, cancelamento e transição entre reserva, retirada e devolução.
+- A tarifa do espaço e dos acessórios será definida pelo Administrador; unidades de cobrança e arredondamento ainda precisam ser detalhados.
+- O grupo e o professor confirmarão versão do .NET e forma de acesso ao SQL Server. O resumo recebido fixa a entrega em 24/11/2026.
+- Os integrantes e seus nomes completos ainda precisam ser adicionados ao documento final e ao arquivo de identificação solicitado pelo professor.

@@ -1,0 +1,129 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+enum PerfilUsuario {
+  Administrador
+  Atendente
+}
+
+enum StatusReserva {
+  Pendente
+  Confirmada
+  Cancelada
+  EmAndamento
+  Devolvida
+}
+
+class Usuario {
+  +int UsuarioId
+  +string Nome
+  +string Login
+  +string SenhaHash
+  +PerfilUsuario Perfil
+  +bool Ativo
+}
+
+class Cliente {
+  +int ClienteId
+  +string Nome
+  +string Telefone
+  +string Email
+  +bool Ativo
+}
+
+class Espaco {
+  +int EspacoId
+  +string Nome
+  +string Endereco
+  +int Capacidade
+  +decimal Tarifa
+  +bool Ativo
+}
+
+class SistemaRpg {
+  +int SistemaRpgId
+  +string Nome
+  +string Descricao
+  +bool Ativo
+}
+
+class Acessorio {
+  +int AcessorioId
+  +string Nome
+  +int QuantidadeEstoque
+  +decimal Tarifa
+  +bool Ativo
+}
+
+class Kit {
+  +int KitId
+  +string Nome
+  +decimal Tarifa
+  +bool Ativo
+}
+
+class ItemKit {
+  +int KitId
+  +int AcessorioId
+  +int Quantidade
+}
+
+class Reserva {
+  +int ReservaId
+  +DateTime Inicio
+  +DateTime Fim
+  +int NumeroParticipantes
+  +StatusReserva Status
+  +decimal ValorEspaco
+  +decimal Desconto
+  +decimal Multas
+  +decimal ValorTotal
+  +ValidarDisponibilidade()
+  +CalcularTotal()
+}
+
+class ItemReserva {
+  +int ItemReservaId
+  +int QuantidadeReservada
+  +int QuantidadeRetirada
+  +int QuantidadeDevolvida
+  +int QuantidadeDanificada
+  +int QuantidadePerdida
+  +decimal TarifaUnitária
+}
+
+class Pagamento {
+  +int PagamentoId
+  +DateTime DataHora
+  +decimal Valor
+  +string Metodo
+  +string Observacao
+}
+
+PerfilUsuario --> Usuario
+StatusReserva --> Reserva
+Cliente "1" -- "0..*" Reserva
+Espaco "1" -- "0..*" Reserva
+Usuario "1" -- "0..*" Reserva : registra
+Reserva "1" *-- "0..*" ItemReserva
+Acessorio "1" -- "0..*" ItemReserva
+SistemaRpg "1" -- "0..*" Acessorio
+Kit "1" *-- "1..*" ItemKit
+Acessorio "1" -- "0..*" ItemKit
+Reserva "1" *-- "0..*" Pagamento
+
+note right of Reserva
+  Fim deve ser posterior ao início.
+  Não há conflito de espaço ou estoque
+  entre reservas que bloqueiam agenda.
+  O total segue: espaço + acessórios
+  + multas - descontos.
+end note
+
+note bottom of Acessorio
+  Relacionamento com SistemaRpg aparece
+  1:N como hipótese inicial; confirmar se
+  acessórios servem a múltiplos sistemas.
+end note
+
+@enduml
