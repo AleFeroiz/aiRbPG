@@ -5,9 +5,11 @@ Documento inicial a partir do resumo fornecido pelo grupo. As regras e prioridad
 ## Identificação e entrega
 
 - Disciplina: Linguagem de Programação VIII — Fatec Itapetininga.
+- Projeto: **aiRbPG — Airbnb de RPG**.
 - Grupo: até três integrantes.
+- Integrantes: Alessandro Silva Vieira, Felipe Gabriel Leite Moreira e Mayzon Rezende do Nascimento.
 - Entrega e demonstração: **24/11/2026 (P2)**.
-- Integrantes: preencher com os nomes completos antes de gerar a versão final para entrega.
+- Formatos finais solicitados pelo grupo: DOCX e PDF.
 
 ## Perfis
 
@@ -71,6 +73,12 @@ O resumo do grupo informa doze requisitos não funcionais, mas especifica dez. O
 5. Somente o Administrador pode alterar tarifas e consultar faturamento.
 
 O resumo menciona nove regras principais, mas detalha cinco. As outras quatro devem ser fornecidas ou aprovadas pelo grupo antes de serem tratadas como requisitos.
+
+## Política de preço a detalhar
+
+O grupo definiu que o preço depende das horas selecionadas, da quantidade de pessoas e dos acessórios adicionais. O Administrador gerenciará as tarifas com um processo de locação inspirado em hospedagens do tipo Airbnb, adaptado ao espaço para RPG. Ainda falta fechar a fórmula e confirmar se haverá taxa de serviço, caução, desconto ou regra de cancelamento; esses itens não devem ser tratados como definidos até aprovação.
+
+Fórmula inicial para aprovação: `total = horas × tarifaHoráriaDoEspaço + horas × participantes × tarifaPorPessoaHora + soma(quantidadeAcessório × horas × tarifaHoráriaDoAcessório) + multas − descontos`. Outra opção é cobrar acessórios por período fixo, em vez de por hora.
 
 ## Critérios iniciais do MVP
 

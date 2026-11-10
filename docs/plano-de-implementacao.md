@@ -7,16 +7,17 @@
 - Produto com três perfis: Administrador, Atendente e Cliente sem acesso ao aplicativo.
 - O grupo tem até três integrantes e prevê entrega/demonstração em 24/11/2026.
 - SDK .NET 10.0.114 instalado no notebook Linux Mint 22.3. O design visual e execução WinForms devem ser validados em Windows.
+- Nome do projeto aiRbPG; três integrantes confirmados; entrega documental em DOCX e PDF.
 - Separar formulários, regras de negócio e acesso a dados para facilitar manutenção e demonstração.
 - Repositório local Git com documentação e arquivos de configuração versionáveis; dados locais, builds e credenciais ficam fora do versionamento.
 
 ## Decisões ainda pendentes
 
-- Confirmação do professor sobre a versão do .NET e modelo de projeto aceitos no laboratório.
-- SQL Server Express, LocalDB ou outra instalação disponível.
+- Validar compatibilidade do .NET 10 com o Visual Studio disponível na máquina Windows de teste.
+- Definir onde será hospedada/acessada a instância SQL Server (por exemplo, computador Windows do grupo ou servidor do laboratório); o banco continua sendo SQL Server.
 - Método de acesso a dados (ADO.NET direto ou tecnologia apresentada pelo professor).
-- Regra de preço (unidade de cobrança, descontos e forma de calcular multas), status e transições.
-- Nomes dos integrantes; o resumo recebido informa que são até três.
+- Fórmula de preço a partir de horas, participantes e acessórios; taxas extras, caução, descontos e política de cancelamento.
+- Status e transições; regras de pagamento, retirada, devolução, atraso, dano e perda.
 - Dois requisitos não funcionais e quatro regras de negócio ainda não detalhados no resumo recebido.
 
 ## Estrutura de solução sugerida

@@ -1,4 +1,4 @@
-# Visão geral do projeto — Airbnb de RPG
+# Visão geral do projeto — aiRbPG
 
 ## Contexto da disciplina
 
@@ -6,7 +6,7 @@ O plano de ensino de Linguagem de Programação VIII (2026) descreve o desenvolv
 
 ## Problema e proposta
 
-O “Airbnb de RPG” permite que um cliente alugue um espaço adequado à sua sessão e reserve acessórios compatíveis com o sistema de RPG escolhido. Os espaços podem incluir casas, galpões ou cômodos; os itens podem incluir livros, miniaturas, fantasias e dados.
+O **aiRbPG** (“Airbnb de RPG”) permite que um cliente alugue um espaço adequado à sua sessão e reserve acessórios compatíveis com o sistema de RPG escolhido. Os espaços podem incluir casas, galpões ou cômodos; os itens podem incluir livros, miniaturas, fantasias e dados.
 
 O sistema será um aplicativo administrativo para cadastrar clientes, espaços, sistemas de RPG e acessórios; organizar reservas de espaço e itens; controlar retirada, devolução, pagamento e multas; e evitar conflitos de agenda e estoque.
 
@@ -18,7 +18,7 @@ O sistema será um aplicativo administrativo para cadastrar clientes, espaços, 
 
 ## Objetivo da primeira versão
 
-Entregar para a P2 de 24/11/2026 um fluxo demonstrável de login/permissões, cadastros essenciais, disponibilidade de espaços e acessórios, criação de reserva com validação de horário/estoque/capacidade, cálculo do valor e consulta de reservas, com dados guardados no SQL Server. O grupo tem até três integrantes.
+Entregar para a P2 de 24/11/2026 um fluxo demonstrável de login/permissões, cadastros essenciais, disponibilidade de espaços e acessórios, criação de reserva com validação de horário/estoque/capacidade, cálculo do valor e consulta de reservas, com dados guardados no SQL Server. O grupo é composto por Alessandro Silva Vieira, Felipe Gabriel Leite Moreira e Mayzon Rezende do Nascimento.
 
 ## Limites do escopo inicial
 
@@ -30,6 +30,6 @@ Fora do escopo inicial: acesso de cliente, pagamentos online, emissão fiscal, i
 
 - Uma reserva está associada a um cliente e a um espaço, além de poder conter itens/acessórios.
 - O grupo precisa fechar os status e as regras de bloqueio, cancelamento e transição entre reserva, retirada e devolução.
-- A tarifa do espaço e dos acessórios será definida pelo Administrador; unidades de cobrança e arredondamento ainda precisam ser detalhados.
-- O grupo e o professor confirmarão versão do .NET e forma de acesso ao SQL Server. O resumo recebido fixa a entrega em 24/11/2026.
-- Os integrantes e seus nomes completos ainda precisam ser adicionados ao documento final e ao arquivo de identificação solicitado pelo professor.
+- O preço depende das horas selecionadas, da quantidade de participantes e dos acessórios. A fórmula exata, taxas adicionais, descontos/caução e política de cancelamento ainda precisam ser definidos; o Administrador gerencia as tarifas.
+- O professor não exigiu versão específica de Visual Studio/.NET; o SDK .NET 10 instalado é a opção atual de trabalho, a validar na máquina Windows. SQL Server é a escolha confirmada para o banco; falta definir em qual máquina/servidor ficará a instância.
+- A documentação final será entregue em DOCX e PDF. Os nomes completos do grupo estão em [`../integrantes.txt`](../integrantes.txt).
