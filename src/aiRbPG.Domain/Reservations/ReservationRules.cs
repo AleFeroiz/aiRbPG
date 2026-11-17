@@ -1,5 +1,6 @@
-namespace aiRbPG.Domain.Reservations;
-
+using System;
+namespace aiRbPG.Domain.Reservations
+{
 public static class ReservationRules
 {
     public static bool PeriodsOverlap(DateTime start, DateTime end, DateTime otherStart, DateTime otherEnd) =>
@@ -22,4 +23,5 @@ public static class ReservationRules
             throw new ArgumentException("A quantidade de pessoas excede a capacidade do espaço.");
         }
     }
+}
 }

@@ -6,16 +6,16 @@
 - SQL Server como banco relacional.
 - Produto com três perfis: Administrador, Atendente e Cliente sem acesso ao aplicativo.
 - O grupo tem até três integrantes e prevê entrega/demonstração em 24/11/2026.
-- SDK .NET 10 instalado no notebook Linux Mint 22.3. A solução usa `net10.0-windows`; execução e validação de WinForms devem ser feitas em Windows.
+- Compatibilidade solicitada: Visual Studio 2015 Update 2 ou posterior, C# 6 e .NET Framework 4.6.1. Os projetos usam o formato clássico `.csproj`; execução e validação de WinForms devem ser feitas em Windows.
 - Nome do projeto aiRbPG; três integrantes confirmados; entrega documental em DOCX e PDF.
 - Separar formulários, regras de negócio e acesso a dados para facilitar manutenção e demonstração.
 - Repositório local Git com documentação e arquivos de configuração versionáveis; dados locais, builds e credenciais ficam fora do versionamento.
 
 ## Decisões ainda pendentes
 
-- Validar compatibilidade do .NET 10 com o Visual Studio disponível na máquina Windows de teste.
+- Na máquina de teste, instalar o .NET Framework 4.6.1 Developer Pack e compilar a solução no Visual Studio 2015 Update 2 ou posterior.
 - Hospedagem definida em um computador Windows, usando SQL Server. Falta escolher a máquina e a instância concreta (Express local ou servidor do laboratório).
-- Método de acesso definido nesta implementação: ADO.NET com `Microsoft.Data.SqlClient`; confirmar se está alinhado ao conteúdo esperado pelo professor.
+- Método de acesso definido nesta implementação: ADO.NET com `System.Data.SqlClient` integrado ao .NET Framework e consultas parametrizadas.
 - Fórmula de preço a partir de horas, participantes e acessórios; taxas extras, caução, descontos e política de cancelamento.
 - Status e transições; regras de pagamento, retirada, devolução, atraso, dano e perda.
 - Dois requisitos não funcionais e quatro regras de negócio ainda não detalhados no resumo recebido.
@@ -32,14 +32,14 @@ database/
 docs/
 ```
 
-O acesso a dados usa ADO.NET com `Microsoft.Data.SqlClient` e consultas parametrizadas. A interface WinForms compila para Windows; no Linux é possível editar arquivos e preparar o código, mas não executar nem validar visualmente os formulários.
+O acesso a dados usa ADO.NET com `System.Data.SqlClient` e consultas parametrizadas. A interface WinForms compila para Windows; no Linux é possível editar arquivos e preparar o código, mas não executar nem validar visualmente os formulários.
 
 ## Etapas sugeridas
 
 1. Completar requisitos com nomes do grupo e confirmar lacunas com professor/integrantes.
 2. Revisar os diagramas UML iniciais de casos de uso e classes.
 3. Fechar o modelo relacional e preparar scripts SQL Server de criação e carga demonstrativa.
-4. Abrir a solução no computador Windows e confirmar o SDK/Visual Studio compatíveis.
+4. Instalar o Visual Studio 2015 Update 2 (ou posterior) e o .NET Framework 4.6.1 Developer Pack; abrir e compilar a solução no computador Windows.
 5. Preparar a instância SQL Server no Windows, executar o script e configurar `AIRBPG_SQL_CONNECTION`.
 6. Validar login/permissões, cadastros e fluxo mínimo de reservas no Windows.
 7. Implementar alteração/cancelamento, retirada/devolução, pagamentos, multas e consultas/relatórios priorizados.

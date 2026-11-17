@@ -1,11 +1,15 @@
-namespace aiRbPG.WinForms;
+using System;
+using System.Windows.Forms;
 
+namespace aiRbPG.WinForms
+{
 internal static class Program
 {
     [STAThread]
     private static void Main()
     {
-        ApplicationConfiguration.Initialize();
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
 
         var connectionFactory = new aiRbPG.Data.SqlConnectionFactory();
         var userRepository = new aiRbPG.Data.Users.SqlUserRepository(connectionFactory);
@@ -13,10 +17,13 @@ internal static class Program
         var reservationRepository = new aiRbPG.Data.Reservations.SqlReservationRepository(connectionFactory);
         var authentication = new aiRbPG.Domain.Users.AuthenticationService(userRepository);
 
-        using var login = new Forms.LoginForm(authentication);
-        if (login.ShowDialog() == DialogResult.OK && login.AuthenticatedUser is { } user)
+        using (var login = new Forms.LoginForm(authentication))
         {
-            Application.Run(new Forms.DashboardForm(user, catalogRepository, reservationRepository));
+            if (login.ShowDialog() == DialogResult.OK && login.AuthenticatedUser != null)
+            {
+                Application.Run(new Forms.DashboardForm(login.AuthenticatedUser, catalogRepository, reservationRepository));
+            }
         }
     }
+}
 }

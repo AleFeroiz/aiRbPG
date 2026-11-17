@@ -1,12 +1,16 @@
-namespace aiRbPG.Domain.Users;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace aiRbPG.Domain.Users
+{
 
 public interface IUserRepository
 {
-    Task<bool> HasAnyUsersAsync(CancellationToken cancellationToken = default);
+    Task<bool> HasAnyUsersAsync(CancellationToken cancellationToken = default(CancellationToken));
 
-    Task<UserAccount?> FindByLoginAsync(
+    Task<UserAccount> FindByLoginAsync(
         string login,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default(CancellationToken));
 
     Task CreateFirstAdministratorAsync(
         string fullName,
@@ -14,5 +18,6 @@ public interface IUserRepository
         byte[] passwordSalt,
         byte[] passwordHash,
         int hashIterations,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default(CancellationToken));
+}
 }

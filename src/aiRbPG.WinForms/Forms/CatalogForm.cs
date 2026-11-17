@@ -1,15 +1,21 @@
 using aiRbPG.Domain.Catalog;
 using System.Globalization;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
-namespace aiRbPG.WinForms.Forms;
-
+namespace aiRbPG.WinForms.Forms
+{
 public sealed class CatalogForm : Form
 {
     private readonly ICatalogRepository _catalog;
     private readonly CatalogKind _kind;
-    private readonly DataGridView _grid = new();
-    private readonly Dictionary<string, TextBox> _inputs = new();
-    private readonly Label _message = new();
+    private readonly DataGridView _grid = new DataGridView();
+    private readonly Dictionary<string, TextBox> _inputs = new Dictionary<string, TextBox>();
+    private readonly Label _message = new Label();
     private int _selectedId;
 
     public CatalogForm(ICatalogRepository catalog, CatalogKind kind)
@@ -27,14 +33,20 @@ public sealed class CatalogForm : Form
         Load += LoadRowsAsync;
     }
 
-    private string Title => _kind switch
+    private string Title
     {
-        CatalogKind.Clients => "Clientes",
-        CatalogKind.Spaces => "Espaços",
-        CatalogKind.RpgSystems => "Sistemas de RPG",
-        CatalogKind.Accessories => "Acessórios e estoque",
-        _ => "Cadastros"
-    };
+        get
+        {
+            switch (_kind)
+            {
+                case CatalogKind.Clients: return "Clientes";
+                case CatalogKind.Spaces: return "Espaços";
+                case CatalogKind.RpgSystems: return "Sistemas de RPG";
+                case CatalogKind.Accessories: return "Acessórios e estoque";
+                default: return "Cadastros";
+            }
+        }
+    }
 
     private void BuildLayout()
     {
@@ -102,7 +114,7 @@ public sealed class CatalogForm : Form
             Margin = new Padding(0, 10, 0, 0)
         };
         buttons.Controls.Add(CreateButton("Salvar", SaveAsync, primary: true));
-        buttons.Controls.Add(CreateButton("Novo", (_, _) => ClearInputs()));
+        buttons.Controls.Add(CreateButton("Novo", (sender, args) => ClearInputs()));
         buttons.Controls.Add(CreateButton("Inativar", DeactivateAsync));
         editor.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
         editor.Controls.Add(buttons, 0, row++);
@@ -118,23 +130,22 @@ public sealed class CatalogForm : Form
         Controls.Add(shell);
     }
 
-    private IEnumerable<(string Key, string Label)> Fields() => _kind switch
+    private IEnumerable<CatalogField> Fields()
     {
-        CatalogKind.Clients => new[] { ("name", "Nome"), ("phone", "Telefone"), ("email", "E-mail") },
-        CatalogKind.Spaces => new[]
+        switch (_kind)
         {
-            ("name", "Nome"), ("description", "Descrição"), ("address", "Endereço"),
-            ("capacity", "Capacidade"), ("hourlyRate", "Tarifa do espaço por hora"),
-            ("personRate", "Tarifa opcional por pessoa/hora")
-        },
-        CatalogKind.RpgSystems => new[] { ("name", "Nome"), ("description", "Descrição") },
-        CatalogKind.Accessories => new[]
-        {
-            ("name", "Nome"), ("description", "Descrição"), ("stock", "Quantidade em estoque"),
-            ("hourlyRate", "Tarifa por unidade/hora")
-        },
-        _ => Array.Empty<(string, string)>()
-    };
+            case CatalogKind.Clients:
+                return new[] { new CatalogField("name", "Nome"), new CatalogField("phone", "Telefone"), new CatalogField("email", "E-mail") };
+            case CatalogKind.Spaces:
+                return new[] { new CatalogField("name", "Nome"), new CatalogField("description", "Descrição"), new CatalogField("address", "Endereço"), new CatalogField("capacity", "Capacidade"), new CatalogField("hourlyRate", "Tarifa do espaço por hora"), new CatalogField("personRate", "Tarifa opcional por pessoa/hora") };
+            case CatalogKind.RpgSystems:
+                return new[] { new CatalogField("name", "Nome"), new CatalogField("description", "Descrição") };
+            case CatalogKind.Accessories:
+                return new[] { new CatalogField("name", "Nome"), new CatalogField("description", "Descrição"), new CatalogField("stock", "Quantidade em estoque"), new CatalogField("hourlyRate", "Tarifa por unidade/hora") };
+            default:
+                return new CatalogField[0];
+        }
+    }
 
     private int FieldCount() => Fields().Count();
 
@@ -155,20 +166,20 @@ public sealed class CatalogForm : Form
         return button;
     }
 
-    private async void LoadRowsAsync(object? sender, EventArgs e) => await RefreshRowsAsync();
+    private async void LoadRowsAsync(object sender, EventArgs e) => await RefreshRowsAsync();
 
     private async Task RefreshRowsAsync()
     {
         try
         {
-            _grid.DataSource = _kind switch
+            switch (_kind)
             {
-                CatalogKind.Clients => await _catalog.GetClientsAsync(),
-                CatalogKind.Spaces => await _catalog.GetSpacesAsync(),
-                CatalogKind.RpgSystems => await _catalog.GetRpgSystemsAsync(),
-                CatalogKind.Accessories => await _catalog.GetAccessoriesAsync(),
-                _ => Array.Empty<object>()
-            };
+                case CatalogKind.Clients: _grid.DataSource = await _catalog.GetClientsAsync(); break;
+                case CatalogKind.Spaces: _grid.DataSource = await _catalog.GetSpacesAsync(); break;
+                case CatalogKind.RpgSystems: _grid.DataSource = await _catalog.GetRpgSystemsAsync(); break;
+                case CatalogKind.Accessories: _grid.DataSource = await _catalog.GetAccessoriesAsync(); break;
+                default: _grid.DataSource = new object[0]; break;
+            }
             _message.Text = string.Empty;
         }
         catch (Exception)
@@ -177,45 +188,55 @@ public sealed class CatalogForm : Form
         }
     }
 
-    private void GridSelectionChanged(object? sender, EventArgs e)
+    private void GridSelectionChanged(object sender, EventArgs e)
     {
-        if (_grid.CurrentRow?.DataBoundItem is not object selected)
+        if (_grid.CurrentRow == null || _grid.CurrentRow.DataBoundItem == null)
         {
             return;
         }
+        var selected = _grid.CurrentRow.DataBoundItem;
 
-        switch (selected)
+        var client = selected as Client;
+        if (client != null)
         {
-            case Client client:
                 _selectedId = client.Id;
                 Set("name", client.Name); Set("phone", client.Phone); Set("email", client.Email);
-                break;
-            case RpgSpace space:
+                return;
+        }
+        var space = selected as RpgSpace;
+        if (space != null)
+        {
                 _selectedId = space.Id;
                 Set("name", space.Name); Set("description", space.Description); Set("address", space.Address);
                 Set("capacity", space.Capacity); Set("hourlyRate", space.HourlyRate); Set("personRate", space.PerPersonHourlyRate);
-                break;
-            case RpgSystem system:
+                return;
+        }
+        var system = selected as RpgSystem;
+        if (system != null)
+        {
                 _selectedId = system.Id;
                 Set("name", system.Name); Set("description", system.Description);
-                break;
-            case Accessory accessory:
+                return;
+        }
+        var accessory = selected as Accessory;
+        if (accessory != null)
+        {
                 _selectedId = accessory.Id;
                 Set("name", accessory.Name); Set("description", accessory.Description);
                 Set("stock", accessory.QuantityInStock); Set("hourlyRate", accessory.HourlyRate);
-                break;
         }
     }
 
-    private void Set(string key, object? value)
+    private void Set(string key, object value)
     {
-        if (_inputs.TryGetValue(key, out var input))
+        TextBox input;
+        if (_inputs.TryGetValue(key, out input))
         {
             input.Text = Convert.ToString(value, CultureInfo.CurrentCulture) ?? string.Empty;
         }
     }
 
-    private async void SaveAsync(object? sender, EventArgs e)
+    private async void SaveAsync(object sender, EventArgs e)
     {
         var name = Value("name").Trim();
         if (name.Length == 0)
@@ -232,9 +253,12 @@ public sealed class CatalogForm : Form
                     await _catalog.SaveClientAsync(new Client(_selectedId, name, Optional("phone"), Optional("email")));
                     break;
                 case CatalogKind.Spaces:
-                    if (!int.TryParse(Value("capacity"), out var capacity) || capacity <= 0 ||
-                        !TryDecimal(Value("hourlyRate"), out var spaceRate) || spaceRate < 0 ||
-                        !TryDecimal(Value("personRate"), out var personRate) || personRate < 0)
+                    int capacity;
+                    decimal spaceRate;
+                    decimal personRate;
+                    if (!int.TryParse(Value("capacity"), out capacity) || capacity <= 0 ||
+                        !TryDecimal(Value("hourlyRate"), out spaceRate) || spaceRate < 0 ||
+                        !TryDecimal(Value("personRate"), out personRate) || personRate < 0)
                     {
                         _message.Text = "Informe capacidade positiva e tarifas válidas, iguais ou maiores que zero.";
                         return;
@@ -246,8 +270,10 @@ public sealed class CatalogForm : Form
                     await _catalog.SaveRpgSystemAsync(new RpgSystem(_selectedId, name, Optional("description")));
                     break;
                 case CatalogKind.Accessories:
-                    if (!int.TryParse(Value("stock"), out var stock) || stock < 0 ||
-                        !TryDecimal(Value("hourlyRate"), out var accessoryRate) || accessoryRate < 0)
+                    int stock;
+                    decimal accessoryRate;
+                    if (!int.TryParse(Value("stock"), out stock) || stock < 0 ||
+                        !TryDecimal(Value("hourlyRate"), out accessoryRate) || accessoryRate < 0)
                     {
                         _message.Text = "Informe estoque não negativo e uma tarifa válida.";
                         return;
@@ -268,7 +294,7 @@ public sealed class CatalogForm : Form
         }
     }
 
-    private async void DeactivateAsync(object? sender, EventArgs e)
+    private async void DeactivateAsync(object sender, EventArgs e)
     {
         if (_selectedId == 0)
         {
@@ -307,9 +333,13 @@ public sealed class CatalogForm : Form
         }
     }
 
-    private string Value(string key) => _inputs.TryGetValue(key, out var input) ? input.Text : string.Empty;
+    private string Value(string key)
+    {
+        TextBox input;
+        return _inputs.TryGetValue(key, out input) ? input.Text : string.Empty;
+    }
 
-    private string? Optional(string key)
+    private string Optional(string key)
     {
         var value = Value(key).Trim();
         return value.Length == 0 ? null : value;
@@ -328,4 +358,12 @@ public sealed class CatalogForm : Form
         }
         _grid.ClearSelection();
     }
+}
+
+internal sealed class CatalogField
+{
+    public CatalogField(string key, string label) { Key = key; Label = label; }
+    public string Key { get; private set; }
+    public string Label { get; private set; }
+}
 }

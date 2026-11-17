@@ -23,11 +23,13 @@ O projeto já tem uma solução C# com camadas de domínio, acesso a dados e Win
 
 ## Abrir e configurar no Windows
 
-1. Instale o SDK .NET 10 e o Visual Studio compatível com desenvolvimento desktop .NET, ou use o SDK pela linha de comando.
-2. Abra `aiRbPG.sln` no Windows.
+1. Use o Visual Studio 2015 Update 2 ou posterior, com o **.NET Framework 4.6.1 Developer Pack** instalado. O projeto foi convertido para projetos clássicos C# (`.csproj`) e sintaxe C# 6.
+2. Abra `aiRbPG.sln` no Windows e selecione a configuração Debug/Any CPU.
 3. Instale/configure uma instância SQL Server no computador Windows que será o servidor do banco. A instância pode ser SQL Server Express para desenvolvimento local.
 4. Execute [`database/scripts/001_create_database.sql`](database/scripts/001_create_database.sql) no SQL Server Management Studio ou `sqlcmd`.
 5. Configure `AIRBPG_SQL_CONNECTION` conforme [`database/README.md`](database/README.md).
-6. Inicie `src/aiRbPG.WinForms`. No primeiro acesso, o aplicativo solicita a criação do administrador inicial.
+6. Defina `src/aiRbPG.WinForms` como projeto de inicialização e execute (F5). No primeiro acesso, o aplicativo solicita a criação do administrador inicial.
+
+> O alvo .NET Framework 4.6.1 atende ao Visual Studio 2015 Update 2. Essa versão do framework está fora do suporte da Microsoft; use-a por compatibilidade com o ambiente exigido e planeje migrar para uma versão suportada quando a restrição deixar de existir.
 
 Ainda falta confirmar a fórmula comercial de cobrança, completar alteração/cancelamento, pagamentos, retirada/devolução e relatórios, e validar o sistema no Windows com o SQL Server escolhido.

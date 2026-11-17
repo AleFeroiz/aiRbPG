@@ -1,5 +1,5 @@
-namespace aiRbPG.Domain.Reservations;
-
+namespace aiRbPG.Domain.Reservations
+{
 public enum ReservationStatus
 {
     Pending,
@@ -8,4 +8,5 @@ public enum ReservationStatus
     InProgress,
     AwaitingReturn,
     Completed
+}
 }

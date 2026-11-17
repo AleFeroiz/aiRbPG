@@ -1,8 +1,11 @@
 using aiRbPG.Domain.Users;
 using aiRbPG.Domain.Catalog;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
-namespace aiRbPG.WinForms.Forms;
-
+namespace aiRbPG.WinForms.Forms
+{
 public sealed class DashboardForm : Form
 {
     private readonly ICatalogRepository _catalog;
@@ -95,14 +98,18 @@ public sealed class DashboardForm : Form
 
     private void OpenCatalog(CatalogKind kind)
     {
-        using var form = new CatalogForm(_catalog, kind);
-        form.ShowDialog(this);
+        using (var form = new CatalogForm(_catalog, kind))
+        {
+            form.ShowDialog(this);
+        }
     }
 
     private void OpenReservations(UserAccount user)
     {
-        using var form = new ReservationForm(user, _catalog, _reservations);
-        form.ShowDialog(this);
+        using (var form = new ReservationForm(user, _catalog, _reservations))
+        {
+            form.ShowDialog(this);
+        }
     }
 
     private void ShowPlaceholder(string message) =>
@@ -124,7 +131,8 @@ public sealed class DashboardForm : Form
             Margin = new Padding(0, 6, 0, 4)
         };
         button.FlatAppearance.BorderSize = 0;
-        button.Click += (_, _) => onClick();
+        button.Click += (sender, args) => onClick();
         sidebar.Controls.Add(button);
     }
+}
 }

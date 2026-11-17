@@ -1,11 +1,16 @@
 using aiRbPG.Domain.Catalog;
 
-namespace aiRbPG.Domain.Reservations;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
-public interface IReservationRepository
+namespace aiRbPG.Domain.Reservations
 {
-    Task<IReadOnlyList<Reservation>> GetReservationsAsync(CancellationToken cancellationToken = default);
-    Task<int> CreateAsync(NewReservation reservation, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<(Accessory Accessory, int Available)>> GetAvailableAccessoriesAsync(
-        DateTime start, DateTime end, CancellationToken cancellationToken = default);
+    public interface IReservationRepository
+    {
+        Task<IReadOnlyList<Reservation>> GetReservationsAsync(CancellationToken cancellationToken = default(CancellationToken));
+        Task<int> CreateAsync(NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken));
+        Task<IReadOnlyList<AccessoryAvailability>> GetAvailableAccessoriesAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default(CancellationToken));
+    }
 }

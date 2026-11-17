@@ -1,15 +1,19 @@
+using System.Threading.Tasks;
 using aiRbPG.Domain.Users;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
-namespace aiRbPG.WinForms.Forms;
-
+namespace aiRbPG.WinForms.Forms
+{
 public sealed class InitialAdministratorForm : Form
 {
     private readonly AuthenticationService _authentication;
-    private readonly TextBox _name = new();
-    private readonly TextBox _login = new();
-    private readonly TextBox _password = new();
-    private readonly TextBox _confirmPassword = new();
-    private readonly Label _message = new();
+    private readonly TextBox _name = new TextBox();
+    private readonly TextBox _login = new TextBox();
+    private readonly TextBox _password = new TextBox();
+    private readonly TextBox _confirmPassword = new TextBox();
+    private readonly Label _message = new Label();
 
     public InitialAdministratorForm(AuthenticationService authentication)
     {
@@ -87,15 +91,35 @@ public sealed class InitialAdministratorForm : Form
     private static void ConfigureInput(TextBox input, string placeholder, bool password = false)
     {
         input.Dock = DockStyle.Fill;
-        input.PlaceholderText = placeholder;
-        input.UseSystemPasswordChar = password;
+        input.AccessibleDescription = placeholder;
+        input.UseSystemPasswordChar = false;
         input.BackColor = Color.FromArgb(38, 43, 56);
-        input.ForeColor = Color.WhiteSmoke;
+        input.ForeColor = Color.Gray;
         input.BorderStyle = BorderStyle.FixedSingle;
         input.Font = new Font("Segoe UI", 10F);
+        input.Tag = placeholder;
+        input.Text = placeholder;
+        input.Enter += delegate
+        {
+            if (input.Text == placeholder)
+            {
+                input.Clear();
+                input.ForeColor = Color.WhiteSmoke;
+                input.UseSystemPasswordChar = password;
+            }
+        };
+        input.Leave += delegate
+        {
+            if (input.Text.Length == 0)
+            {
+                input.UseSystemPasswordChar = false;
+                input.Text = placeholder;
+                input.ForeColor = Color.Gray;
+            }
+        };
     }
 
-    private async void CreateAdministratorAsync(object? sender, EventArgs e)
+    private async void CreateAdministratorAsync(object sender, EventArgs e)
     {
         if (_password.Text != _confirmPassword.Text)
         {
@@ -114,4 +138,5 @@ public sealed class InitialAdministratorForm : Form
             _message.Text = exception.Message;
         }
     }
+}
 }

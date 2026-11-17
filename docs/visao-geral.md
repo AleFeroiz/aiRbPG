@@ -31,5 +31,5 @@ Fora do escopo inicial: acesso de cliente, pagamentos online, emissão fiscal, i
 - Uma reserva está associada a um cliente e a um espaço, além de poder conter itens/acessórios.
 - O grupo precisa fechar os status e as regras de bloqueio, cancelamento e transição entre reserva, retirada e devolução.
 - O preço depende das horas selecionadas, da quantidade de participantes e dos acessórios. A fórmula exata, taxas adicionais, descontos/caução e política de cancelamento ainda precisam ser definidos; o Administrador gerencia as tarifas.
-- O professor não exigiu versão específica de Visual Studio/.NET; o SDK .NET 10 instalado é a opção atual de trabalho, a validar na máquina Windows. SQL Server é a escolha confirmada para o banco; falta definir em qual máquina/servidor ficará a instância.
+- O grupo solicitou compatibilidade com Visual Studio 2015 Update 2 ou posterior; por isso a aplicação usa C# 6 e .NET Framework 4.6.1. SQL Server é a escolha confirmada para o banco; falta definir em qual máquina/servidor ficará a instância.
 - A documentação final será entregue em DOCX e PDF. Os nomes completos do grupo estão em [`../integrantes.txt`](../integrantes.txt).

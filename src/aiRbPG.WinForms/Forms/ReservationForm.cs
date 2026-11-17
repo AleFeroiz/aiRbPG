@@ -3,24 +3,30 @@ using aiRbPG.Domain.Pricing;
 using aiRbPG.Domain.Reservations;
 using aiRbPG.Domain.Users;
 using System.Globalization;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Forms;
 
-namespace aiRbPG.WinForms.Forms;
-
+namespace aiRbPG.WinForms.Forms
+{
 public sealed class ReservationForm : Form
 {
     private readonly UserAccount _user;
     private readonly ICatalogRepository _catalog;
     private readonly IReservationRepository _reservations;
-    private readonly DataGridView _list = new();
-    private readonly DataGridView _accessories = new();
-    private readonly ComboBox _client = new();
-    private readonly ComboBox _space = new();
+    private readonly DataGridView _list = new DataGridView();
+    private readonly DataGridView _accessories = new DataGridView();
+    private readonly ComboBox _client = new ComboBox();
+    private readonly ComboBox _space = new ComboBox();
     private readonly DateTimePicker _start = DatePicker(DateTime.Now.AddHours(1));
     private readonly DateTimePicker _end = DatePicker(DateTime.Now.AddHours(4));
-    private readonly NumericUpDown _people = new() { Minimum = 1, Maximum = 100, Value = 4, Width = 90 };
-    private readonly TextBox _notes = new();
-    private readonly Label _status = new();
-    private readonly Label _quote = new();
+    private readonly NumericUpDown _people = new NumericUpDown() { Minimum = 1, Maximum = 100, Value = 4, Width = 90 };
+    private readonly TextBox _notes = new TextBox();
+    private readonly Label _status = new Label();
+    private readonly Label _quote = new Label();
 
     public ReservationForm(UserAccount user, ICatalogRepository catalog, IReservationRepository reservations)
     {
@@ -34,7 +40,7 @@ public sealed class ReservationForm : Form
         BackColor = Color.FromArgb(242, 240, 235);
         Font = new Font("Segoe UI", 10F);
         BuildLayout();
-        Load += async (_, _) => await LoadAsync();
+        Load += async (sender, args) => await LoadAsync();
     }
 
     private void BuildLayout()
@@ -54,9 +60,9 @@ public sealed class ReservationForm : Form
         _accessories.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Disponível", DataPropertyName = "Available", ReadOnly = true, Width = 90 });
         _accessories.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "R$/h", DataPropertyName = "Rate", ReadOnly = true, Width = 80 });
         _accessories.Columns.Add(new DataGridViewTextBoxColumn { HeaderText = "Qtd.", DataPropertyName = "Quantity", Width = 70 });
-        _accessories.CellEndEdit += (_, _) => UpdateQuote();
-        _accessories.CurrentCellDirtyStateChanged += (_, _) => { if (_accessories.IsCurrentCellDirty) _accessories.CommitEdit(DataGridViewDataErrorContexts.Commit); };
-        _accessories.DataError += (_, e) => { e.ThrowException = false; _status.Text = "Informe uma quantidade inteira válida."; };
+        _accessories.CellEndEdit += (sender, args) => UpdateQuote();
+        _accessories.CurrentCellDirtyStateChanged += (sender, args) => { if (_accessories.IsCurrentCellDirty) _accessories.CommitEdit(DataGridViewDataErrorContexts.Commit); };
+        _accessories.DataError += (sender, args) => { args.ThrowException = false; _status.Text = "Informe uma quantidade inteira válida."; };
 
         var left = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 2, ColumnCount = 1, Padding = new Padding(0, 0, 18, 0) };
         left.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
@@ -85,13 +91,13 @@ public sealed class ReservationForm : Form
         _status.ForeColor = Color.FromArgb(117, 74, 41);
         right.Controls.Add(_status, 0, 5);
         var buttons = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
-        buttons.Controls.Add(Button("Criar reserva", async (_, _) => await CreateAsync(), true));
-        buttons.Controls.Add(Button("Atualizar estoque", async (_, _) => await LoadAccessoriesAsync()));
+        buttons.Controls.Add(Button("Criar reserva", async (sender, args) => await CreateAsync(), true));
+        buttons.Controls.Add(Button("Atualizar estoque", async (sender, args) => await LoadAccessoriesAsync()));
         right.Controls.Add(buttons, 0, 6);
-        _start.ValueChanged += async (_, _) => await LoadAccessoriesAsync();
-        _end.ValueChanged += async (_, _) => await LoadAccessoriesAsync();
-        _space.SelectedIndexChanged += (_, _) => UpdateQuote();
-        _people.ValueChanged += (_, _) => UpdateQuote();
+        _start.ValueChanged += async (sender, args) => await LoadAccessoriesAsync();
+        _end.ValueChanged += async (sender, args) => await LoadAccessoriesAsync();
+        _space.SelectedIndexChanged += (sender, args) => UpdateQuote();
+        _people.ValueChanged += (sender, args) => UpdateQuote();
         root.Controls.Add(left, 0, 0);
         root.Controls.Add(right, 1, 0);
         Controls.Add(root);
@@ -157,7 +163,8 @@ public sealed class ReservationForm : Form
 
     private void UpdateQuote()
     {
-        if (_space.SelectedItem is not RpgSpace space || _end.Value <= _start.Value) return;
+        var space = _space.SelectedItem as RpgSpace;
+        if (space == null || _end.Value <= _start.Value) return;
         try
         {
             var charges = ReadAccessoryRows().Where(row => row.Quantity > 0).Select(row => new AccessoryCharge(row.Quantity, row.Rate));
@@ -169,14 +176,16 @@ public sealed class ReservationForm : Form
 
     private async Task CreateAsync()
     {
-        if (_client.SelectedItem is not Client client || _space.SelectedItem is not RpgSpace space)
+        var client = _client.SelectedItem as Client;
+        var space = _space.SelectedItem as RpgSpace;
+        if (client == null || space == null)
         { _status.Text = "Cadastre ou selecione um cliente e um espaço ativo."; return; }
         try
         {
             var rows = ReadAccessoryRows();
             if (rows.Any(row => row.Quantity < 0 || row.Quantity > row.Available))
             { _status.Text = "As quantidades precisam estar entre zero e o estoque disponível."; return; }
-            var id = await _reservations.CreateAsync(new NewReservation(client.Id, space.Id, _user.Id, _start.Value, _end.Value, (int)_people.Value, string.IsNullOrWhiteSpace(_notes.Text) ? null : _notes.Text, rows.Where(row => row.Quantity > 0).Select(row => new ReservationAccessory(row.Id, row.Name, row.Quantity, row.Rate)).ToArray()));
+            var id = await _reservations.CreateAsync(new NewReservation(client.Id, space.Id, _user.Id, _start.Value, _end.Value, (int)_people.Value, string.IsNullOrWhiteSpace(_notes.Text) ? null : _notes.Text, rows.Where(row => row.Quantity > 0).Select(row => new ReservationAccessory(row.AccessoryId, row.Name, row.Quantity, row.Rate)).ToArray()));
             _status.Text = $"Reserva #{id} criada como pendente.";
             await RefreshReservationsAsync();
             await LoadAccessoriesAsync();
@@ -188,9 +197,13 @@ public sealed class ReservationForm : Form
     {
         _accessories.EndEdit();
         return _accessories.Rows.Cast<DataGridViewRow>().Where(row => !row.IsNewRow)
-            .Select(row => new AccessoryRow(Convert.ToInt32(row.Cells[0].Value), Convert.ToString(row.Cells[1].Value) ?? "Acessório",
-                Convert.ToInt32(row.Cells[2].Value), Convert.ToDecimal(row.Cells[3].Value),
-                int.TryParse(Convert.ToString(row.Cells[4].Value), out var quantity) ? quantity : 0)).ToList();
+            .Select(row =>
+            {
+                int quantity;
+                int.TryParse(Convert.ToString(row.Cells[4].Value), out quantity);
+                return new AccessoryRow(Convert.ToInt32(row.Cells[0].Value), Convert.ToString(row.Cells[1].Value) ?? "Acessório",
+                    Convert.ToInt32(row.Cells[2].Value), Convert.ToDecimal(row.Cells[3].Value), quantity);
+            }).ToList();
     }
 
     private static void ConfigureGrid(DataGridView grid)
@@ -204,8 +217,8 @@ public sealed class ReservationForm : Form
         grid.RowHeadersVisible = false;
     }
 
-    private static DateTimePicker DatePicker(DateTime value) => new() { Format = DateTimePickerFormat.Custom, CustomFormat = "dd/MM/yyyy HH:mm", ShowUpDown = true, Value = value };
-    private static Label Heading(string text) => new() { Text = text, Dock = DockStyle.Fill, Font = new Font("Segoe UI Semibold", 18F, FontStyle.Bold), ForeColor = Color.FromArgb(36, 41, 51), TextAlign = ContentAlignment.MiddleLeft };
+    private static DateTimePicker DatePicker(DateTime value) => new DateTimePicker() { Format = DateTimePickerFormat.Custom, CustomFormat = "dd/MM/yyyy HH:mm", ShowUpDown = true, Value = value };
+    private static Label Heading(string text) => new Label() { Text = text, Dock = DockStyle.Fill, Font = new Font("Segoe UI Semibold", 18F, FontStyle.Bold), ForeColor = Color.FromArgb(36, 41, 51), TextAlign = ContentAlignment.MiddleLeft };
     private static Button Button(string text, EventHandler onClick, bool primary = false)
     {
         var button = new Button { Text = text, AutoSize = true, Height = 36, FlatStyle = FlatStyle.Flat, BackColor = primary ? Color.FromArgb(183, 132, 55) : Color.FromArgb(225, 222, 215), ForeColor = primary ? Color.White : Color.FromArgb(36, 41, 51) };
@@ -213,12 +226,15 @@ public sealed class ReservationForm : Form
         return button;
     }
 
-    private sealed class AccessoryRow(int accessoryId, string name, int available, decimal rate, int quantity)
+    private sealed class AccessoryRow
     {
-        public int AccessoryId { get; } = accessoryId;
-        public string Name { get; } = name;
-        public int Available { get; } = available;
-        public decimal Rate { get; } = rate;
-        public int Quantity { get; set; } = quantity;
+        public AccessoryRow(int accessoryId, string name, int available, decimal rate, int quantity)
+        { AccessoryId = accessoryId; Name = name; Available = available; Rate = rate; Quantity = quantity; }
+        public int AccessoryId { get; private set; }
+        public string Name { get; private set; }
+        public int Available { get; private set; }
+        public decimal Rate { get; private set; }
+        public int Quantity { get; set; }
     }
+}
 }

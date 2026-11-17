@@ -1,4 +1,9 @@
-namespace aiRbPG.Domain.Pricing;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace aiRbPG.Domain.Pricing
+{
 
 /// <summary>
 /// Initial pricing proposal: hourly space rate plus an optional per-person hourly rate
@@ -15,7 +20,7 @@ public static class PricingCalculator
         decimal discount = 0,
         decimal fines = 0)
     {
-        ArgumentNullException.ThrowIfNull(accessories);
+        if (accessories == null) throw new ArgumentNullException("accessories");
         if (hours <= 0 || people <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(hours), "Informe duração e quantidade de pessoas positivas.");
@@ -51,4 +56,5 @@ public static class PricingCalculator
     }
 
     private static decimal Round(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
+}
 }

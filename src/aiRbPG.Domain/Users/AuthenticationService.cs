@@ -1,17 +1,23 @@
-namespace aiRbPG.Domain.Users;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-public sealed class AuthenticationService(IUserRepository users)
+namespace aiRbPG.Domain.Users
 {
+public sealed class AuthenticationService
+{
+    private readonly IUserRepository users;
+    public AuthenticationService(IUserRepository users) { this.users = users; }
     public const int MinimumPasswordLength = 10;
 
-    public async Task<bool> NeedsInitialAdministratorAsync(CancellationToken cancellationToken = default) =>
+    public async Task<bool> NeedsInitialAdministratorAsync(CancellationToken cancellationToken = default(CancellationToken)) =>
         !await users.HasAnyUsersAsync(cancellationToken);
 
     public async Task CreateInitialAdministratorAsync(
         string fullName,
         string login,
         string password,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default(CancellationToken))
     {
         fullName = fullName.Trim();
         login = login.Trim();
@@ -31,7 +37,9 @@ public sealed class AuthenticationService(IUserRepository users)
             throw new InvalidOperationException("O Administrador inicial já foi criado.");
         }
 
-        var (salt, hash) = PasswordHashing.Create(password);
+        byte[] salt;
+        byte[] hash;
+        PasswordHashing.Create(password, out salt, out hash);
         await users.CreateFirstAdministratorAsync(
             fullName,
             login,
@@ -44,7 +52,7 @@ public sealed class AuthenticationService(IUserRepository users)
     public async Task<AuthenticationResult> AuthenticateAsync(
         string login,
         string password,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default(CancellationToken))
     {
         if (string.IsNullOrWhiteSpace(login) || string.IsNullOrEmpty(password))
         {
@@ -52,7 +60,7 @@ public sealed class AuthenticationService(IUserRepository users)
         }
 
         var user = await users.FindByLoginAsync(login.Trim(), cancellationToken);
-        if (user is null || !user.IsActive ||
+        if (user == null || !user.IsActive ||
             !PasswordHashing.Verify(password, user.PasswordSalt, user.PasswordHash, user.HashIterations))
         {
             return AuthenticationResult.Failure("Usuário ou senha inválidos.");
@@ -60,4 +68,5 @@ public sealed class AuthenticationService(IUserRepository users)
 
         return AuthenticationResult.Success(user);
     }
+}
 }

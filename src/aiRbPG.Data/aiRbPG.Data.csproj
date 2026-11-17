@@ -1,14 +1,28 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.props" Condition="Exists('$(MSBuildToolsPath)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{525AEFDC-9219-4BA9-B28C-9DE32724A639}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>aiRbPG.Data</RootNamespace>
+    <AssemblyName>aiRbPG.Data</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols><DebugType>full</DebugType><Optimize>false</Optimize><OutputPath>bin\Debug\</OutputPath><DefineConstants>DEBUG;TRACE</DefineConstants><WarningLevel>4</WarningLevel><LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType><Optimize>true</Optimize><OutputPath>bin\Release\</OutputPath><DefineConstants>TRACE</DefineConstants><WarningLevel>4</WarningLevel><LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <ItemGroup><Reference Include="System" /><Reference Include="System.Core" /><Reference Include="System.Data" /></ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\aiRbPG.Domain\aiRbPG.Domain.csproj" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.8" />
+    <Compile Include="SqlConnectionFactory.cs" /><Compile Include="Catalog\*.cs" /><Compile Include="Reservations\*.cs" /><Compile Include="Users\*.cs" />
   </ItemGroup>
-
+  <ItemGroup>
+    <ProjectReference Include="..\aiRbPG.Domain\aiRbPG.Domain.csproj"><Project>{93C2D6EF-BB1C-441D-9B16-01243D51E0DE}</Project><Name>aiRbPG.Domain</Name></ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

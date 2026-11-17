@@ -1,17 +1,30 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.props" Condition="Exists('$(MSBuildToolsPath)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{96B8AA01-21CD-4A46-A1E2-EFDB11E9096F}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <Nullable>enable</Nullable>
-    <UseWindowsForms>true</UseWindowsForms>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>aiRbPG.WinForms</RootNamespace>
+    <AssemblyName>aiRbPG.WinForms</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
-
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols><DebugType>full</DebugType><Optimize>false</Optimize><OutputPath>bin\Debug\</OutputPath><DefineConstants>DEBUG;TRACE</DefineConstants><WarningLevel>4</WarningLevel><LangVersion>6</LangVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType><Optimize>true</Optimize><OutputPath>bin\Release\</OutputPath><DefineConstants>TRACE</DefineConstants><WarningLevel>4</WarningLevel><LangVersion>6</LangVersion>
+  </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\aiRbPG.Domain\aiRbPG.Domain.csproj" />
-    <ProjectReference Include="..\aiRbPG.Data\aiRbPG.Data.csproj" />
+    <Reference Include="System" /><Reference Include="System.Core" /><Reference Include="System.Drawing" /><Reference Include="System.Windows.Forms" />
   </ItemGroup>
-
+  <ItemGroup><Compile Include="Program.cs" /><Compile Include="Forms\*.cs" /></ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\aiRbPG.Domain\aiRbPG.Domain.csproj"><Project>{93C2D6EF-BB1C-441D-9B16-01243D51E0DE}</Project><Name>aiRbPG.Domain</Name></ProjectReference>
+    <ProjectReference Include="..\aiRbPG.Data\aiRbPG.Data.csproj"><Project>{525AEFDC-9219-4BA9-B28C-9DE32724A639}</Project><Name>aiRbPG.Data</Name></ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

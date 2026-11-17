@@ -1,14 +1,18 @@
+using System.Threading.Tasks;
 using aiRbPG.Domain.Users;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
-namespace aiRbPG.WinForms.Forms;
-
+namespace aiRbPG.WinForms.Forms
+{
 public sealed class LoginForm : Form
 {
     private readonly AuthenticationService _authentication;
-    private readonly TextBox _loginInput = new();
-    private readonly TextBox _passwordInput = new();
-    private readonly Label _message = new();
-    private readonly Button _signInButton = new();
+    private readonly TextBox _loginInput = new TextBox();
+    private readonly TextBox _passwordInput = new TextBox();
+    private readonly Label _message = new Label();
+    private readonly Button _signInButton = new Button();
 
     public LoginForm(AuthenticationService authentication)
     {
@@ -28,7 +32,7 @@ public sealed class LoginForm : Form
         Shown += CheckInitialSetupAsync;
     }
 
-    public UserAccount? AuthenticatedUser { get; private set; }
+    public UserAccount AuthenticatedUser { get; private set; }
 
     private void BuildLayout()
     {
@@ -97,26 +101,47 @@ public sealed class LoginForm : Form
     private static void ConfigureInput(TextBox input, string placeholder, bool password = false)
     {
         input.Dock = DockStyle.Fill;
-        input.PlaceholderText = placeholder;
-        input.UseSystemPasswordChar = password;
+        input.AccessibleDescription = placeholder;
         input.Margin = new Padding(0, 6, 0, 6);
         input.BackColor = Color.FromArgb(38, 43, 56);
-        input.ForeColor = Color.WhiteSmoke;
+        input.ForeColor = Color.Gray;
         input.BorderStyle = BorderStyle.FixedSingle;
         input.Font = new Font("Segoe UI", 11F);
+        input.Tag = placeholder;
+        input.Text = placeholder;
+        input.Enter += delegate
+        {
+            if (input.Text == placeholder)
+            {
+                input.Clear();
+                input.ForeColor = Color.WhiteSmoke;
+                input.UseSystemPasswordChar = password;
+            }
+        };
+        input.Leave += delegate
+        {
+            if (input.Text.Length == 0)
+            {
+                input.UseSystemPasswordChar = false;
+                input.Text = placeholder;
+                input.ForeColor = Color.Gray;
+            }
+        };
     }
 
-    private async void CheckInitialSetupAsync(object? sender, EventArgs e)
+    private async void CheckInitialSetupAsync(object sender, EventArgs e)
     {
         try
         {
             if (await _authentication.NeedsInitialAdministratorAsync())
             {
-                using var setup = new InitialAdministratorForm(_authentication);
-                if (setup.ShowDialog(this) != DialogResult.OK)
+                using (var setup = new InitialAdministratorForm(_authentication))
                 {
-                    Close();
-                    return;
+                    if (setup.ShowDialog(this) != DialogResult.OK)
+                    {
+                        Close();
+                        return;
+                    }
                 }
 
                 _message.Text = "Administrador criado. Entre com o usuário cadastrado.";
@@ -128,13 +153,13 @@ public sealed class LoginForm : Form
         }
     }
 
-    private async void SignInAsync(object? sender, EventArgs e)
+    private async void SignInAsync(object sender, EventArgs e)
     {
         _signInButton.Enabled = false;
         try
         {
             var result = await _authentication.AuthenticateAsync(_loginInput.Text, _passwordInput.Text);
-            if (!result.Succeeded || result.User is null)
+            if (!result.Succeeded || result.User == null)
             {
                 _message.Text = result.Message;
                 _passwordInput.Clear();
@@ -155,4 +180,5 @@ public sealed class LoginForm : Form
             _signInButton.Enabled = true;
         }
     }
+}
 }

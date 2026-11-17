@@ -1,7 +1,8 @@
-using Microsoft.Data.SqlClient;
+using System;
+using System.Data.SqlClient;
 
-namespace aiRbPG.Data;
-
+namespace aiRbPG.Data
+{
 public sealed class SqlConnectionFactory
 {
     public const string ConnectionEnvironmentVariable = "AIRBPG_SQL_CONNECTION";
@@ -17,4 +18,5 @@ public sealed class SqlConnectionFactory
 
         return new SqlConnection(connectionString);
     }
+}
 }
