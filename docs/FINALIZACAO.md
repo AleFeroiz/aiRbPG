@@ -12,7 +12,7 @@ Aplicação desktop C# / SQL Server, compilável com ferramentas VS2015, documen
 - [x] Gerenciar atendentes e aplicar permissões.
 - [x] Testar regras, persistência e interface sem alterar os dados de uso.
 - [x] Gerar documentação DOCX/PDF com dois diagramas e manual.
-- [ ] Revisar e empacotar entrega com fontes, SQL e integrantes.
+- [x] Revisar e empacotar entrega com fontes, SQL e integrantes.
 
 ## Decisões de implementação
 
@@ -24,3 +24,7 @@ Aplicação desktop C# / SQL Server, compilável com ferramentas VS2015, documen
 - Kits (RF07) permanecem opcionais e fora da entrega operacional. Não afirmar implementação desse módulo.
 - Banco e contas de uso preservados; testes em banco temporário separado. Não publicar senhas nem arquivos de banco.
 - Nenhum envio à plataforma ou push solicitado nesta etapa.
+
+## Fechamento
+
+VS2015 Community Update 3 instalado e solução reconstruída pela própria IDE, inclusive após extração do ZIP: três projetos aprovados e zero falhas. Entrega em ../../entrega/aiRbPG-Entrega.zip, com 83 arquivos e hashes conferidos. Documento final de 14 páginas renderizado e revisado. Envio e demonstração a cargo do grupo; sem push.

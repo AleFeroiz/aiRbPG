@@ -58,3 +58,12 @@
 - Corrigida borda herdada do estilo de título; versão final reexportada. Comparação dos PNGs mostrou alteração somente nas páginas 1 e 6, reinspecionadas. Diagramas PNG e fontes PlantUML coerentes; fontes UML iniciais preservadas em Zé/referencias/uml-inicial.
 - Requisitos distinguem funcionalidades implementadas de kits opcionais, e deixam claros os limites: sem estorno, cobrança online, recuperação de senha, multa automática ou teste de carga. Conferência cobre cada exigência do professor.
 - Mídia oficial VS2015 Update 3 completa, 7.617.847.296 bytes, montada somente leitura em F:. Instalador 14.0.25420.1 com assinatura Microsoft válida; instalação offline iniciada. Ainda aguardando resultado.
+
+## Entrega final e IDE 2015 confirmadas
+- Visual Studio Community 2015 Update 3 instalado pela mídia oficial offline; instalador terminou com código 0 e sem reinicialização. devenv.exe 14.0.25420.1 presente; vswhere -legacy confirmou VisualStudio.14.0.
+- Rebuild da solução pela própria IDE via devenv.com: 3 projetos aprovados, 0 falhas. Log em Zé/.revisao/testes/build-ide-vs2015.txt. A IDE informou licença inicial de 30 dias; eventual entrada/ativação da Community deve ser feita pelo usuário, sem automação de autenticação. Designer e F5 não foram homologados.
+- Documento final de 14 páginas atualizado com a instalação real e reexportado pelo Word. Páginas 13 e 14 alteradas foram reinspecionadas; demais imagens permaneceram idênticas à revisão aprovada.
+- Pacote Zé/entrega/aiRbPG-Entrega.zip criado: 83 arquivos, cerca de 2,2 MB, pasta principal com os três nomes completos, integrantes.txt, código, SQL, aplicativo Release, DOCX/PDF, dois diagramas e evidências. Sem banco local, contas, senhas, .git, .vs, obj ou instaladores.
+- ZIP extraído em pasta separada: 82 hashes do manifesto confirmados e todos os arquivos obrigatórios presentes. Solução extraída reconstruída pela própria IDE 2015: 3 projetos aprovados, 0 falhas. Maior caminho da pasta de entrega: 205 caracteres, abaixo do limite clássico do Windows.
+- Início nesta máquina: Zé/INICIAR-aiRbPG.cmd. Código na IDE instalada: Zé/ABRIR-NO-VS2015.cmd. Banco de uso permanece aiRbPG, com a conta anterior preservada. A versão antiga está em arquivo-anterior e não é o ponto de desenvolvimento.
+- Trabalho concluído no escopo de entrega documentado. Envio à plataforma e apresentação são realizados pelo grupo. Não foi feito push ao GitHub.

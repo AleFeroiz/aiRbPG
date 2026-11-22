@@ -300,7 +300,7 @@ table(['Grupo','Evidência'],[
 ('Histórico e relatórios','Registro de ações, total de recebimentos, acessórios mais reservados e preservação após inativação.'),
 ('Interface Windows','Cliente e reserva criados por formulário; editor, confirmação, usuários e relatórios observados; quantidade preservada ao atualizar.'),
 ],[1.65,5.15])
-p('A compilação foi verificada com as ferramentas reais de 2015 e .NET Framework 4.6.1. O teste do Designer e F5 dentro da IDE completa deve ser distinguido da compilação por MSBuild. As evidências e o estado da instalação da IDE ficam em PROGRESSO.md.')
+p('Visual Studio Community 2015 Update 3 foi instalado nesta máquina. A própria IDE, via devenv.com, reconstruiu a solução Release com três projetos aprovados e zero falhas. As ferramentas MSBuild 14.0 também foram usadas. O Designer e o comando F5 não foram homologados; a execução foi validada pelo aplicativo compilado.')
 p('Limites da versão','Heading 2')
 p('Kits e associações entre acessórios e sistemas não possuem interface. Não há estorno, nota fiscal, pagamento online, multa automática por atraso, recuperação de senha ou cadastro público de clientes. Não houve ensaio de carga nem homologação do ambiente do laboratório. A demonstração usa dados fictícios.')
 

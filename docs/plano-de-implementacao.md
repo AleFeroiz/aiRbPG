@@ -16,7 +16,7 @@ Documento DOCX/PDF em documentacao, com requisitos, dois diagramas UML, regras, 
 
 ## Validação específica da IDE
 
-Ferramentas 2015 instaladas e usadas. Instalação da IDE completa por mídia offline em acompanhamento; o resultado e eventuais limites devem ser registrados no progresso. Não declarar teste de Designer/F5 sem executá-lo.
+Ferramentas 2015 instaladas e usadas. IDE Visual Studio Community 2015 Update 3 instalada por mídia oficial; solução original e cópia extraída do ZIP reconstruídas pela própria IDE, com três projetos aprovados e zero falhas em ambas. Designer e F5 continuam sem homologação. Evidências no progresso.
 
 ## Estrutura
 

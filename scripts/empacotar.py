@@ -25,7 +25,8 @@ for name in ['src','database','scripts','tests']:
     for path in sorted((root/name).rglob('*')):
         relative=path.relative_to(root)
         if not path.is_file() or any(p in {'bin','obj','.vs','__pycache__'} for p in relative.parts):continue
-        if path.suffix.lower() in {'.mdf','.ldf','.bak','.log','.tmp','.local.json'}:continue
+        if path.suffix.lower() in {'.mdf','.ldf','.bak','.log','.tmp','.user','.suo'}:continue
+        if path.name.startswith('.env') or path.name.lower().endswith('.local.json'):continue
         copy(path,Path('CodigoFonte')/relative)
 for path in ['README.md','AGENTS.md','.gitignore','aiRbPG.sln','INICIAR.cmd','integrantes.txt','docs/requisitos.md','docs/especificacao.json']:
     copy(root/path,Path('CodigoFonte')/path)
@@ -42,6 +43,7 @@ copy(root/'integrantes.txt','integrantes.txt')
 copy(root.parent/'referencias/Trabalho 2 Sem 2026 - Mat - LPVIII.pdf','Referencias/Enunciado-original.pdf')
 copy(root.parent/'referencias/instrucoes-plataforma.png','Referencias/instrucoes-plataforma.png')
 copy(root.parent/'.revisao/testes/testes-debug.txt','Verificacoes/testes-debug.txt')
+copy(root.parent/'.revisao/testes/build-ide-vs2015.txt','Verificacoes/build-ide-vs2015.txt')
 write('INICIAR.cmd','@echo off\npowershell.exe -NoProfile -File "%~dp0CodigoFonte\\scripts\\iniciar.ps1"\nif errorlevel 1 pause\n')
 write('CONFIGURAR-BANCO.cmd','@echo off\npowershell.exe -NoProfile -File "%~dp0CodigoFonte\\scripts\\configurar-banco.ps1"\npause\n')
 write('ABRIR-PROJETO.cmd','@echo off\nif exist "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe" (\n start "" "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe" "%~dp0CodigoFonte\\aiRbPG.sln"\n) else (\n start "" "%~dp0CodigoFonte\\aiRbPG.sln"\n)\n')
@@ -79,7 +81,7 @@ write('CONFERENCIA-ENTREGA.md','''# Conferência de entrega
 
 51 verificações de integração aprovadas. Cadastro de cliente e reserva, edição, confirmação e consultas administrativas verificados no Windows com SQL Server em banco isolado. Banco de uso atualizado sem apagar a conta existente.
 
-O VS2015 é o alvo de compatibilidade; os testes usam MSBuild 14.0 e C# 6. O pacote não afirma validação do Designer da IDE. Kits, estorno e pagamentos online não fazem parte da versão operacional.
+Visual Studio Community 2015 Update 3 instalado e solução reconstruída pela própria IDE: 3 projetos aprovados, 0 falhas. Os testes também usam MSBuild 14.0 e C# 6. O pacote não afirma validação do Designer da IDE ou F5. Kits, estorno e pagamentos online não fazem parte da versão operacional.
 
 Prazo informado na plataforma: 24/11/2026 às 23h59. Envio e apresentação são feitos pelo grupo.
 ''')
