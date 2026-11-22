@@ -13,8 +13,8 @@
 
 ## Decisões ainda pendentes
 
-- Na máquina de teste, instalar o .NET Framework 4.6.1 Developer Pack e compilar a solução no Visual Studio 2015 Update 2 ou posterior.
-- Hospedagem definida em um computador Windows, usando SQL Server. Falta escolher a máquina e a instância concreta (Express local ou servidor do laboratório).
+- Compilação Debug e Release validada no Windows com Build Tools 2015 e Developer Pack 4.6.1. Abertura/Designer/F5 na IDE 2015 ainda pendentes; ver PROGRESSO.md.
+- Ambiente local preparado com SQL Server 2022 Express em localhost\SQLEXPRESS. A máquina/instância da demonstração do grupo ainda precisa ser confirmada.
 - Método de acesso definido nesta implementação: ADO.NET com `System.Data.SqlClient` integrado ao .NET Framework e consultas parametrizadas.
 - Fórmula de preço a partir de horas, participantes e acessórios; taxas extras, caução, descontos e política de cancelamento.
 - Status e transições; regras de pagamento, retirada, devolução, atraso, dano e perda.

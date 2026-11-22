@@ -19,17 +19,17 @@ Integrantes: Alessandro Silva Vieira, Felipe Gabriel Leite Moreira e Mayzon Reze
 
 ## Situação
 
-O projeto já tem uma solução C# com camadas de domínio, acesso a dados e Windows Forms, além do script inicial do SQL Server. Foram iniciados login, cadastro de clientes/espaços/sistemas/acessórios e criação de reservas com validação de agenda, capacidade e estoque. A aplicação WinForms precisa ser compilada, executada e validada em um computador Windows; este notebook Linux serve para preparar o código e a documentação.
+O projeto já tem uma solução C# com camadas de domínio, acesso a dados e Windows Forms, além do script inicial do SQL Server. Foram iniciados login, cadastro de clientes/espaços/sistemas/acessórios e criação de reservas com validação de agenda, capacidade e estoque. A solução foi compilada no Windows com MSBuild 14.0 e o compilador C# de 2015, em Debug e Release. Conexão SQL Server, autenticação e fluxo inicial de reservas foram verificados; veja as evidências e limites em [docs/PROGRESSO.md](docs/PROGRESSO.md).
 
 ## Abrir e configurar no Windows
 
 1. Use o Visual Studio 2015 Update 2 ou posterior, com o **.NET Framework 4.6.1 Developer Pack** instalado. O projeto foi convertido para projetos clássicos C# (`.csproj`) e sintaxe C# 6.
 2. Abra `aiRbPG.sln` no Windows e selecione a configuração Debug/Any CPU.
 3. Instale/configure uma instância SQL Server no computador Windows que será o servidor do banco. A instância pode ser SQL Server Express para desenvolvimento local.
-4. Execute [`database/scripts/001_create_database.sql`](database/scripts/001_create_database.sql) no SQL Server Management Studio ou `sqlcmd`.
-5. Configure `AIRBPG_SQL_CONNECTION` conforme [`database/README.md`](database/README.md).
+4. Para SQL Server Express local com autenticação Windows, execute `powershell -NoProfile -File scripts\configurar-banco.ps1` na raiz do projeto. O script executa o SQL inicial e configura a conexão para o usuário atual. Para outra instância, use `-Servidor "SERVIDOR\INSTANCIA"`. Alternativamente, execute [`database/scripts/001_create_database.sql`](database/scripts/001_create_database.sql) no SQL Server Management Studio ou `sqlcmd`.
+5. Se usou o script, a variável `AIRBPG_SQL_CONNECTION` já estará configurada. Caso contrário, configure-a conforme [`database/README.md`](database/README.md). Reabra o Visual Studio para carregar a variável.
 6. Defina `src/aiRbPG.WinForms` como projeto de inicialização e execute (F5). No primeiro acesso, o aplicativo solicita a criação do administrador inicial.
 
 > O alvo .NET Framework 4.6.1 atende ao Visual Studio 2015 Update 2. Essa versão do framework está fora do suporte da Microsoft; use-a por compatibilidade com o ambiente exigido e planeje migrar para uma versão suportada quando a restrição deixar de existir.
 
-Ainda falta confirmar a fórmula comercial de cobrança, completar alteração/cancelamento, pagamentos, retirada/devolução e relatórios, e validar o sistema no Windows com o SQL Server escolhido.
+Ainda falta confirmar a fórmula comercial de cobrança, completar alteração/cancelamento, pagamentos, retirada/devolução e relatórios, e validar os demais fluxos e a abertura na IDE Visual Studio 2015.

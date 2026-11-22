@@ -23,3 +23,13 @@ Feche e reabra o Visual Studio para ele ler a variável. Se usar outra instânci
 ## Observação sobre preço
 
 O grupo ainda precisa aprovar a fórmula. A estimativa implementada considera tarifas por hora para espaço e acessório e uma tarifa opcional por pessoa/hora; a reserva guarda os valores aplicados para preservar o histórico.
+
+## Preparação automática local
+
+Com SQL Server Express instalado e o usuário Windows autorizado a criar bancos, execute da raiz:
+
+```powershell
+powershell -NoProfile -File scripts\configurar-banco.ps1
+```
+
+Para outra instância, acrescente `-Servidor "SERVIDOR\INSTANCIA"`. O script aplica o SQL inicial em lotes GO e salva a conexão integrada para o usuário atual. Ele não instala SQL Server nem cria uma conta de administrador do aplicativo. Reabra a IDE após executá-lo. As evidências do ambiente preparado estão em [docs/PROGRESSO.md](../docs/PROGRESSO.md).
