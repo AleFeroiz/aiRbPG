@@ -13,7 +13,6 @@ internal static class Program
 
         var connectionFactory = new aiRbPG.Data.SqlConnectionFactory();
         var userRepository = new aiRbPG.Data.Users.SqlUserRepository(connectionFactory);
-        var catalogRepository = new aiRbPG.Data.Catalog.SqlCatalogRepository(connectionFactory);
         var reservationRepository = new aiRbPG.Data.Reservations.SqlReservationRepository(connectionFactory);
         var authentication = new aiRbPG.Domain.Users.AuthenticationService(userRepository);
 
@@ -21,6 +20,7 @@ internal static class Program
         {
             if (login.ShowDialog() == DialogResult.OK && login.AuthenticatedUser != null)
             {
+                var catalogRepository = new aiRbPG.Data.Catalog.SqlCatalogRepository(connectionFactory, login.AuthenticatedUser);
                 Application.Run(new Forms.DashboardForm(login.AuthenticatedUser, catalogRepository, reservationRepository));
             }
         }

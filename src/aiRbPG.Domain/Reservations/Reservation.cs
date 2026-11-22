@@ -16,8 +16,9 @@ namespace aiRbPG.Domain.Reservations
 
     public sealed class Reservation
     {
-        public Reservation(int id, string clientName, string spaceName, DateTime start, DateTime end, int people, string status, decimal total)
-        { Id = id; ClientName = clientName; SpaceName = spaceName; Start = start; End = end; People = people; Status = status; Total = total; }
+        public Reservation(int id, string clientName, string spaceName, DateTime start, DateTime end, int people, string status, decimal total, int spaceId = 0)
+        { Id = id; ClientName = clientName; SpaceName = spaceName; Start = start; End = end; People = people; Status = status; Total = total; SpaceId = spaceId; }
+        public int SpaceId { get; private set; }
         public int Id { get; private set; }
         public string ClientName { get; private set; }
         public string SpaceName { get; private set; }

@@ -288,9 +288,9 @@ public sealed class CatalogForm : Form
             await RefreshRowsAsync();
             _message.Text = "Cadastro salvo.";
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            _message.Text = "Não foi possível salvar. Confira os dados e a conexão com o banco.";
+            _message.Text = "Não foi possível salvar: " + ex.Message;
         }
     }
 

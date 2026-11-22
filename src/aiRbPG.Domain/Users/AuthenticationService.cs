@@ -22,9 +22,9 @@ public sealed class AuthenticationService
         fullName = fullName.Trim();
         login = login.Trim();
 
-        if (fullName.Length == 0 || login.Length == 0)
+        if (fullName.Length == 0 || login.Length == 0 || fullName.Length > 120 || login.Length > 60)
         {
-            throw new ArgumentException("Informe o nome completo e o usuário.");
+            throw new ArgumentException("Informe nome (até 120 caracteres) e usuário (até 60 caracteres).");
         }
 
         if (password.Length < MinimumPasswordLength)

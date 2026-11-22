@@ -61,7 +61,7 @@ public sealed class DashboardForm : Form
             AddNavigationButton(sidebar, "Espaços", () => OpenCatalog(CatalogKind.Spaces));
             AddNavigationButton(sidebar, "Acessórios", () => OpenCatalog(CatalogKind.Accessories));
             AddNavigationButton(sidebar, "Sistemas de RPG", () => OpenCatalog(CatalogKind.RpgSystems));
-            AddNavigationButton(sidebar, "Tarifas e relatórios", () => ShowPlaceholder("Relatórios e administração de usuários serão adicionados em seguida."));
+            AddNavigationButton(sidebar, "Usuários e relatórios", () => { using (var form = new AdministrationForm(new aiRbPG.Data.Reservations.SqlOperationsRepository(new aiRbPG.Data.SqlConnectionFactory(),user))) form.ShowDialog(this); });
         }
 
         var main = new Panel { Dock = DockStyle.Fill, Padding = new Padding(44, 36, 44, 36) };
@@ -82,7 +82,7 @@ public sealed class DashboardForm : Form
         };
         var intro = new Label
         {
-            Text = "Base inicial pronta. Use o menu para acessar os módulos do aiRbPG.",
+            Text = "Gerencie cadastros, reservas, pagamentos e devoluções pelo menu lateral.",
             Dock = DockStyle.Top,
             Height = 50,
             ForeColor = Color.FromArgb(74, 78, 86)

@@ -11,7 +11,14 @@ namespace aiRbPG.Data.Catalog
     public sealed class SqlCatalogRepository : ICatalogRepository
     {
         private readonly SqlConnectionFactory connections;
-        public SqlCatalogRepository(SqlConnectionFactory connections) { this.connections = connections; }
+        private readonly int userId;
+        public SqlCatalogRepository(SqlConnectionFactory connections, aiRbPG.Domain.Users.UserAccount user)
+        { this.connections = connections; if (user == null) throw new ArgumentNullException("user"); userId = user.Id; }
+
+        private static void Name(string value, int max)
+        { if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > max) throw new ArgumentException("Nome obrigatório, limitado a " + max + " caracteres."); }
+        private static void Length(string value, int max)
+        { if (value != null && value.Length > max) throw new ArgumentException("Campo excede o limite de " + max + " caracteres."); }
 
         public async Task<IReadOnlyList<Client>> GetClientsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -30,6 +37,7 @@ namespace aiRbPG.Data.Catalog
 
         public Task SaveClientAsync(Client client, CancellationToken cancellationToken = default(CancellationToken))
         {
+            Name(client.Name,120); Length(client.Phone,30); Length(client.Email,254);
             return SaveAsync(client.Id,
                 "INSERT dbo.Clientes (Nome, Telefone, Email) VALUES (@Nome, @Telefone, @Email);",
                 "UPDATE dbo.Clientes SET Nome = @Nome, Telefone = @Telefone, Email = @Email WHERE ClienteId = @Id AND Ativo = 1;",
@@ -61,6 +69,8 @@ namespace aiRbPG.Data.Catalog
 
         public Task SaveSpaceAsync(RpgSpace space, CancellationToken cancellationToken = default(CancellationToken))
         {
+            Name(space.Name,100); Length(space.Description,500); Length(space.Address,250);
+            if (space.Capacity <= 0 || space.HourlyRate < 0 || space.PerPersonHourlyRate < 0) throw new ArgumentException("Capacidade e tarifas inválidas.");
             return SaveAsync(space.Id,
                 "INSERT dbo.Espacos (Nome, Descricao, Endereco, Capacidade, TarifaHora, TarifaPessoaHora) VALUES (@Nome, @Descricao, @Endereco, @Capacidade, @TarifaHora, @TarifaPessoaHora);",
                 "UPDATE dbo.Espacos SET Nome=@Nome, Descricao=@Descricao, Endereco=@Endereco, Capacidade=@Capacidade, TarifaHora=@TarifaHora, TarifaPessoaHora=@TarifaPessoaHora WHERE EspacoId=@Id AND Ativo=1;",
@@ -95,6 +105,7 @@ namespace aiRbPG.Data.Catalog
 
         public Task SaveRpgSystemAsync(RpgSystem system, CancellationToken cancellationToken = default(CancellationToken))
         {
+            Name(system.Name,100); Length(system.Description,500);
             return SaveAsync(system.Id,
                 "INSERT dbo.SistemasRpg (Nome, Descricao) VALUES (@Nome, @Descricao);",
                 "UPDATE dbo.SistemasRpg SET Nome=@Nome, Descricao=@Descricao WHERE SistemaRpgId=@Id AND Ativo=1;",
@@ -125,9 +136,11 @@ namespace aiRbPG.Data.Catalog
 
         public Task SaveAccessoryAsync(Accessory accessory, CancellationToken cancellationToken = default(CancellationToken))
         {
+            Name(accessory.Name,120); Length(accessory.Description,500);
+            if (accessory.QuantityInStock < 0 || accessory.HourlyRate < 0) throw new ArgumentException("Estoque e tarifa não podem ser negativos.");
             return SaveAsync(accessory.Id,
                 "INSERT dbo.Acessorios (Nome, Descricao, QuantidadeEstoque, TarifaHora) VALUES (@Nome, @Descricao, @QuantidadeEstoque, @TarifaHora);",
-                "UPDATE dbo.Acessorios SET Nome=@Nome, Descricao=@Descricao, QuantidadeEstoque=@QuantidadeEstoque, TarifaHora=@TarifaHora WHERE AcessorioId=@Id AND Ativo=1;",
+                "IF @QuantidadeEstoque < (SELECT COALESCE(SUM(i.QuantidadeReservada-i.QuantidadeDevolvida-i.QuantidadeDanificada-i.QuantidadePerdida),0) FROM dbo.ItensReserva i JOIN dbo.Reservas r ON r.ReservaId=i.ReservaId WHERE i.AcessorioId=@Id AND r.Status NOT IN(N'Cancelada',N'Finalizada')) THROW 50002,N'Estoque inferior às quantidades comprometidas em reservas abertas.',1; UPDATE dbo.Acessorios SET Nome=@Nome, Descricao=@Descricao, QuantidadeEstoque=@QuantidadeEstoque, TarifaHora=@TarifaHora WHERE AcessorioId=@Id AND Ativo=1;",
                 delegate(SqlCommand command)
                 {
                     command.Parameters.Add("@Nome", SqlDbType.NVarChar, 120).Value = accessory.Name.Trim();
@@ -145,11 +158,14 @@ namespace aiRbPG.Data.Catalog
             using (var connection = connections.Create())
             {
                 await connection.OpenAsync(cancellationToken);
-                using (var command = new SqlCommand(id == 0 ? insertSql : updateSql, connection))
+                using (var transaction = connection.BeginTransaction(IsolationLevel.Serializable))
+                using (var command = new SqlCommand(Permission(insertSql) + (id == 0 ? insertSql : updateSql), connection, transaction))
                 {
+                    command.Parameters.AddWithValue("@User",userId);
                     addParameters(command);
                     if (id != 0) command.Parameters.Add("@Id", SqlDbType.Int).Value = id;
-                    await command.ExecuteNonQueryAsync(cancellationToken);
+                    if (await command.ExecuteNonQueryAsync(cancellationToken) != 1) throw new InvalidOperationException("Registro inativo ou inexistente.");
+                    transaction.Commit();
                 }
             }
         }
@@ -159,12 +175,19 @@ namespace aiRbPG.Data.Catalog
             using (var connection = connections.Create())
             {
                 await connection.OpenAsync(cancellationToken);
-                using (var command = new SqlCommand(sql, connection))
+                using (var command = new SqlCommand(Permission(sql) + sql, connection))
                 {
+                    command.Parameters.AddWithValue("@User",userId);
                     command.Parameters.Add("@Id", SqlDbType.Int).Value = id;
                     await command.ExecuteNonQueryAsync(cancellationToken);
                 }
             }
+        }
+
+        private static string Permission(string sql)
+        {
+            var role = sql.Contains("dbo.Clientes") ? "IN(N'Administrador',N'Atendente')" : "=N'Administrador'";
+            return "IF NOT EXISTS(SELECT 1 FROM dbo.Usuarios WHERE UsuarioId=@User AND Ativo=1 AND Perfil " + role + ") THROW 50001,N'Usuário sem permissão para este cadastro.',1; ";
         }
 
         private static string OptionalTrim(string value) { return string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }

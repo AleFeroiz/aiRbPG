@@ -24,3 +24,12 @@
 - Para abrir o código, usar aiRbPG.sln e definir aiRbPG.WinForms como projeto de inicialização. VS2015 requer Update 2 ou posterior e Developer Pack 4.6.1.
 - SQL Server é um programa separado da IDE: esta instalação local usa a versão 2022. Não implica exigir Visual Studio 2022 para compilar a aplicação. Em outra máquina, configurar a instância e executar o script de banco.
 - Não foram validados todos os formulários, Designer do VS2015, permissões por perfil ou todos os fluxos de negócio. Pendências funcionais anteriores continuam no plano.
+
+## Implementação operacional em 22/11/2026
+- Cópia canônica agora em Zé/aiRbPG. Referências do professor preservadas em Zé/referencias. A pasta antiga está bloqueada por um processo e será limpa somente após conferência da cópia.
+- Implementados edição transacional, confirmação, cancelamento, pagamentos parciais, desconto administrativo, retirada integral, devolução parcial com dano/perda, quitação/finalização, histórico, usuários/atendentes e relatórios por período.
+- Validada autorização de alterações de tarifas/catálogos e consultas administrativas na camada de dados. Inativação lógica e credenciais com hash preservadas.
+- Script de configuração agora aplica migrações SQL ordenadas; 002_historico.sql adiciona histórico sem alterar o SQL original.
+- Correções: entradas de quantidades inválidas não viram zero silenciosamente; valores arredondados por item; campos de reserva com espaço adequado; consulta de espaços livres distingue identificadores.
+- Primeira suíte Debug: 45 verificações aprovadas. Suíte ampliada Release: 51 verificações aprovadas, zero erros/avisos de compilação com MSBuild 14.0. Script scripts/testar.ps1 cria banco único aiRbPG_Test_*, aplica migrações e remove-o em finally. Dados de uso não alterados por testes.
+- Verificação visual e documentação final em andamento; não confundir build pelas ferramentas 2015 com teste de Designer/F5 na IDE 2015.

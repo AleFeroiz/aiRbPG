@@ -1,4 +1,4 @@
-using aiRbPG.Domain.Catalog;
+﻿using aiRbPG.Domain.Catalog;
 using aiRbPG.Domain.Pricing;
 using aiRbPG.Domain.Reservations;
 using System;
@@ -18,7 +18,7 @@ namespace aiRbPG.Data.Reservations
 
         public async Task<IReadOnlyList<Reservation>> GetReservationsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
-            const string sql = "SELECT r.ReservaId, c.Nome, e.Nome, r.Inicio, r.Fim, r.QuantidadePessoas, r.Status, r.ValorTotal FROM dbo.Reservas r JOIN dbo.Clientes c ON c.ClienteId=r.ClienteId JOIN dbo.Espacos e ON e.EspacoId=r.EspacoId ORDER BY r.Inicio DESC;";
+            const string sql = "SELECT r.ReservaId, c.Nome, e.Nome, r.Inicio, r.Fim, r.QuantidadePessoas, r.Status, r.ValorTotal, r.EspacoId FROM dbo.Reservas r JOIN dbo.Clientes c ON c.ClienteId=r.ClienteId JOIN dbo.Espacos e ON e.EspacoId=r.EspacoId ORDER BY r.Inicio DESC;";
             var rows = new List<Reservation>();
             using (var connection = connections.Create())
             {
@@ -33,7 +33,7 @@ namespace aiRbPG.Data.Reservations
 
         public async Task<IReadOnlyList<AccessoryAvailability>> GetAvailableAccessoriesAsync(DateTime start, DateTime end, CancellationToken cancellationToken = default(CancellationToken))
         {
-            const string sql = "SELECT a.AcessorioId, a.Nome, a.Descricao, a.QuantidadeEstoque, a.TarifaHora, CONVERT(INT, a.QuantidadeEstoque - COALESCE(SUM(CASE WHEN r.ReservaId IS NULL THEN 0 ELSE ir.QuantidadeReservada END), 0)) AS Disponivel FROM dbo.Acessorios a LEFT JOIN dbo.ItensReserva ir ON ir.AcessorioId=a.AcessorioId LEFT JOIN dbo.Reservas r ON r.ReservaId=ir.ReservaId AND r.Status NOT IN (N'Cancelada',N'Finalizada') AND r.Inicio<@Fim AND r.Fim>@Inicio WHERE a.Ativo=1 GROUP BY a.AcessorioId,a.Nome,a.Descricao,a.QuantidadeEstoque,a.TarifaHora ORDER BY a.Nome;";
+            const string sql = "SELECT a.AcessorioId, a.Nome, a.Descricao, a.QuantidadeEstoque, a.TarifaHora, CONVERT(INT, a.QuantidadeEstoque - COALESCE(SUM(CASE WHEN r.ReservaId IS NULL THEN 0 ELSE ir.QuantidadeReservada-CASE WHEN r.Status IN(N'EmAndamento',N'AguardandoDevolucao') THEN ir.QuantidadeDevolvida+ir.QuantidadeDanificada+ir.QuantidadePerdida ELSE 0 END END), 0)) AS Disponivel FROM dbo.Acessorios a LEFT JOIN dbo.ItensReserva ir ON ir.AcessorioId=a.AcessorioId LEFT JOIN dbo.Reservas r ON r.ReservaId=ir.ReservaId AND r.Status NOT IN (N'Cancelada',N'Finalizada') AND r.Inicio<@Fim AND (r.Fim>@Inicio OR r.Status IN(N'EmAndamento',N'AguardandoDevolucao')) WHERE a.Ativo=1 GROUP BY a.AcessorioId,a.Nome,a.Descricao,a.QuantidadeEstoque,a.TarifaHora ORDER BY a.Nome;";
             var rows = new List<AccessoryAvailability>();
             using (var connection = connections.Create())
             {
@@ -53,9 +53,21 @@ namespace aiRbPG.Data.Reservations
             return rows;
         }
 
-        public async Task<int> CreateAsync(NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<int> CreateAsync(NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken))
+        { return SaveAsync(0, reservation, cancellationToken); }
+
+        public Task<int> UpdateAsync(int id, NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (id <= 0) throw new ArgumentException("Selecione uma reserva.");
+            return SaveAsync(id, reservation, cancellationToken);
+        }
+
+        private async Task<int> SaveAsync(int id, NewReservation reservation, CancellationToken cancellationToken)
         {
             if (reservation == null) throw new ArgumentNullException("reservation");
+            if (reservation.Accessories == null || reservation.Accessories.Any(x => x == null || x.Quantity < 0) || reservation.Accessories.GroupBy(x => x.AccessoryId).Any(g => g.Count() > 1))
+                throw new ArgumentException("Informe acessórios sem duplicação e quantidades não negativas.");
+            if (reservation.Notes != null && reservation.Notes.Length > 500) throw new ArgumentException("Observação limitada a 500 caracteres.");
             if (reservation.End <= reservation.Start) throw new ArgumentException("O horário de término deve ser posterior ao início.");
             if (reservation.People <= 0) throw new ArgumentException("A reserva deve ter pelo menos uma pessoa.");
             var hours = (decimal)(reservation.End - reservation.Start).TotalMinutes / 60m;
@@ -67,6 +79,22 @@ namespace aiRbPG.Data.Reservations
                 {
                     try
                     {
+                        using (var valid = new SqlCommand("SELECT COUNT(*) FROM dbo.Clientes WHERE ClienteId=@Cliente AND Ativo=1;", connection, transaction))
+                        {
+                            valid.Parameters.AddWithValue("@Cliente", reservation.ClientId);
+                            if (Convert.ToInt32(await valid.ExecuteScalarAsync(cancellationToken)) != 1) throw new InvalidOperationException("Cliente inativo ou inexistente.");
+                            valid.CommandText = "SELECT COUNT(*) FROM dbo.Usuarios WHERE UsuarioId=@Usuario AND Ativo=1;";
+                            valid.Parameters.AddWithValue("@Usuario", reservation.CreatedByUserId);
+                            if (Convert.ToInt32(await valid.ExecuteScalarAsync(cancellationToken)) != 1) throw new UnauthorizedAccessException("Usuário inativo ou inexistente.");
+                        }
+                        if (id != 0)
+                        {
+                            using (var editable = new SqlCommand("SELECT COUNT(*) FROM dbo.Reservas WITH (UPDLOCK,HOLDLOCK) WHERE ReservaId=@Id AND Status IN (N'Pendente',N'Confirmada') AND NOT EXISTS(SELECT 1 FROM dbo.Pagamentos p WHERE p.ReservaId=@Id);", connection, transaction))
+                            {
+                                editable.Parameters.AddWithValue("@Id", id);
+                                if (Convert.ToInt32(await editable.ExecuteScalarAsync(cancellationToken)) != 1) throw new InvalidOperationException("Só é possível alterar reserva pendente/confirmada sem pagamentos.");
+                            }
+                        }
                         int capacity;
                         decimal spaceRate;
                         decimal personRate;
@@ -81,8 +109,9 @@ namespace aiRbPG.Data.Reservations
                         }
                         ReservationRules.Validate(reservation.Start, reservation.End, reservation.People, capacity);
 
-                        using (var conflict = new SqlCommand("SELECT COUNT_BIG(*) FROM dbo.Reservas WITH (UPDLOCK,HOLDLOCK) WHERE EspacoId=@EspacoId AND Status NOT IN (N'Cancelada',N'Finalizada') AND Inicio<@Fim AND Fim>@Inicio;", connection, transaction))
+                        using (var conflict = new SqlCommand("SELECT COUNT_BIG(*) FROM dbo.Reservas WITH (UPDLOCK,HOLDLOCK) WHERE ReservaId<>@Id AND EspacoId=@EspacoId AND Status NOT IN (N'Cancelada',N'Finalizada') AND Inicio<@Fim AND (Fim>@Inicio OR Status IN(N'EmAndamento',N'AguardandoDevolucao'));", connection, transaction))
                         {
+                            conflict.Parameters.AddWithValue("@Id", id);
                             conflict.Parameters.Add("@EspacoId", SqlDbType.Int).Value = reservation.SpaceId;
                             conflict.Parameters.Add("@Inicio", SqlDbType.DateTime2).Value = reservation.Start;
                             conflict.Parameters.Add("@Fim", SqlDbType.DateTime2).Value = reservation.End;
@@ -93,8 +122,9 @@ namespace aiRbPG.Data.Reservations
                         var accessoryPrices = new Dictionary<int, decimal>();
                         foreach (var item in reservation.Accessories.Where(x => x.Quantity > 0).OrderBy(x => x.AccessoryId))
                         {
-                            using (var availability = new SqlCommand("SELECT a.TarifaHora,a.QuantidadeEstoque-COALESCE(SUM(CASE WHEN r.ReservaId IS NULL THEN 0 ELSE ir.QuantidadeReservada END),0) FROM dbo.Acessorios a WITH (UPDLOCK,HOLDLOCK) LEFT JOIN dbo.ItensReserva ir ON ir.AcessorioId=a.AcessorioId LEFT JOIN dbo.Reservas r ON r.ReservaId=ir.ReservaId AND r.Status NOT IN (N'Cancelada',N'Finalizada') AND r.Inicio<@Fim AND r.Fim>@Inicio WHERE a.AcessorioId=@AcessorioId AND a.Ativo=1 GROUP BY a.TarifaHora,a.QuantidadeEstoque;", connection, transaction))
+                            using (var availability = new SqlCommand("SELECT a.TarifaHora,a.QuantidadeEstoque-COALESCE(SUM(CASE WHEN r.ReservaId IS NULL THEN 0 ELSE ir.QuantidadeReservada-CASE WHEN r.Status IN(N'EmAndamento',N'AguardandoDevolucao') THEN ir.QuantidadeDevolvida+ir.QuantidadeDanificada+ir.QuantidadePerdida ELSE 0 END END),0) FROM dbo.Acessorios a WITH (UPDLOCK,HOLDLOCK) LEFT JOIN dbo.ItensReserva ir ON ir.AcessorioId=a.AcessorioId LEFT JOIN dbo.Reservas r ON r.ReservaId=ir.ReservaId AND r.ReservaId<>@Id AND r.Status NOT IN (N'Cancelada',N'Finalizada') AND r.Inicio<@Fim AND (r.Fim>@Inicio OR r.Status IN(N'EmAndamento',N'AguardandoDevolucao')) WHERE a.AcessorioId=@AcessorioId AND a.Ativo=1 GROUP BY a.TarifaHora,a.QuantidadeEstoque;", connection, transaction))
                             {
+                                availability.Parameters.AddWithValue("@Id", id);
                                 availability.Parameters.Add("@AcessorioId", SqlDbType.Int).Value = item.AccessoryId;
                                 availability.Parameters.Add("@Inicio", SqlDbType.DateTime2).Value = reservation.Start;
                                 availability.Parameters.Add("@Fim", SqlDbType.DateTime2).Value = reservation.End;
@@ -113,8 +143,10 @@ namespace aiRbPG.Data.Reservations
                         var quote = PricingCalculator.Calculate(hours, reservation.People, spaceRate, personRate, charges);
                         int reservationId;
                         const string insertSql = "INSERT dbo.Reservas (ClienteId,EspacoId,CriadaPorUsuarioId,Inicio,Fim,QuantidadePessoas,Status,Horas,TarifaEspacoHoraAplicada,TarifaPessoaHoraAplicada,SubtotalEspaco,SubtotalPessoas,Desconto,Multas,ValorTotal,Observacao) OUTPUT INSERTED.ReservaId VALUES (@ClienteId,@EspacoId,@UsuarioId,@Inicio,@Fim,@Pessoas,N'Pendente',@Horas,@TarifaEspaco,@TarifaPessoa,@SubtotalEspaco,@SubtotalPessoas,0,0,@Total,@Observacao);";
-                        using (var insert = new SqlCommand(insertSql, connection, transaction))
+                        const string updateSql = "UPDATE dbo.Reservas SET ClienteId=@ClienteId,EspacoId=@EspacoId,Inicio=@Inicio,Fim=@Fim,QuantidadePessoas=@Pessoas,Horas=@Horas,TarifaEspacoHoraAplicada=@TarifaEspaco,TarifaPessoaHoraAplicada=@TarifaPessoa,SubtotalEspaco=@SubtotalEspaco,SubtotalPessoas=@SubtotalPessoas,Desconto=0,Multas=0,ValorTotal=@Total,Observacao=@Observacao OUTPUT INSERTED.ReservaId WHERE ReservaId=@Id; DELETE dbo.ItensReserva WHERE ReservaId=@Id;";
+                        using (var insert = new SqlCommand(id == 0 ? insertSql : updateSql, connection, transaction))
                         {
+                            insert.Parameters.AddWithValue("@Id", id);
                             insert.Parameters.Add("@ClienteId", SqlDbType.Int).Value = reservation.ClientId;
                             insert.Parameters.Add("@EspacoId", SqlDbType.Int).Value = reservation.SpaceId;
                             insert.Parameters.Add("@UsuarioId", SqlDbType.Int).Value = reservation.CreatedByUserId;
@@ -143,6 +175,13 @@ namespace aiRbPG.Data.Reservations
                                 AddDecimal(insertItem, "@Subtotal", subtotal, 10, 2);
                                 await insertItem.ExecuteNonQueryAsync(cancellationToken);
                             }
+                        }
+                        using (var audit = new SqlCommand("INSERT dbo.HistoricoReservas(ReservaId,UsuarioId,Acao,Observacao) VALUES(@Id,@User,@Acao,@Nota);",connection,transaction))
+                        {
+                            audit.Parameters.AddWithValue("@Id",reservationId); audit.Parameters.AddWithValue("@User",reservation.CreatedByUserId);
+                            audit.Parameters.AddWithValue("@Acao",id == 0 ? "Criação" : "Alteração");
+                            audit.Parameters.AddWithValue("@Nota",id == 0 ? "Reserva criada." : "Período e itens revalidados; tarifas atuais aplicadas e desconto zerado.");
+                            await audit.ExecuteNonQueryAsync(cancellationToken);
                         }
                         transaction.Commit();
                         return reservationId;

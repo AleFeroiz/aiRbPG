@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -39,7 +39,7 @@ public static class PricingCalculator
 
         var spaceSubtotal = Round(hours * spaceHourlyRate);
         var peopleSubtotal = Round(hours * people * perPersonHourlyRate);
-        var accessoriesSubtotal = Round(charges.Sum(item => hours * item.Quantity * item.HourlyRate));
+        var accessoriesSubtotal = charges.Sum(item => Round(hours * item.Quantity * item.HourlyRate));
         var rawTotal = spaceSubtotal + peopleSubtotal + accessoriesSubtotal + fines - discount;
         if (rawTotal < 0)
         {

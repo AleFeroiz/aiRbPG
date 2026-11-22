@@ -10,7 +10,7 @@ $builder["Connect Timeout"] = 15
 $connection = New-Object System.Data.SqlClient.SqlConnection $builder.ConnectionString
 try {
     $connection.Open()
-    $sql = Get-Content (Join-Path $PSScriptRoot '..\database\scripts\001_create_database.sql') -Raw -Encoding UTF8
+    $sql = (Get-ChildItem (Join-Path $PSScriptRoot '..\database\scripts') -Filter '*.sql' | Sort-Object Name | ForEach-Object { Get-Content $_.FullName -Raw -Encoding UTF8 }) -join "`r`nGO`r`n"
     foreach ($batch in [regex]::Split($sql, '(?im)^\s*GO\s*\r?$')) {
         if ([string]::IsNullOrWhiteSpace($batch)) { continue }
         $command = $connection.CreateCommand()
