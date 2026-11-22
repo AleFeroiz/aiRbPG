@@ -67,3 +67,5 @@
 - ZIP extraído em pasta separada: 82 hashes do manifesto confirmados e todos os arquivos obrigatórios presentes. Solução extraída reconstruída pela própria IDE 2015: 3 projetos aprovados, 0 falhas. Maior caminho da pasta de entrega: 205 caracteres, abaixo do limite clássico do Windows.
 - Início nesta máquina: Zé/INICIAR-aiRbPG.cmd. Código na IDE instalada: Zé/ABRIR-NO-VS2015.cmd. Banco de uso permanece aiRbPG, com a conta anterior preservada. A versão antiga está em arquivo-anterior e não é o ponto de desenvolvimento.
 - Trabalho concluído no escopo de entrega documentado. Envio à plataforma e apresentação são realizados pelo grupo. Não foi feito push ao GitHub.
+- A IDE2015 expandiu automaticamente Forms\*.cs para a lista explícita dos oito formulários no csproj WinForms. Alteração revisada e preservada; alvo 4.6.1 e linguagem 6 inalterados. O pacote já contém essa forma explícita, idêntica ao projeto atual.
+- Iniciador final executado com sucesso: processo da versão canônica Release aberto na tela aiRbPG — Acesso, conexão real conferida e tabela HistoricoReservas presente.

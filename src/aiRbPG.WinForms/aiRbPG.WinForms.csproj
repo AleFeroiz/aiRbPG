@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.props" Condition="Exists('$(MSBuildToolsPath)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -13,18 +13,50 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols><DebugType>full</DebugType><Optimize>false</Optimize><OutputPath>bin\Debug\</OutputPath><DefineConstants>DEBUG;TRACE</DefineConstants><WarningLevel>4</WarningLevel><LangVersion>6</LangVersion>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType><Optimize>true</Optimize><OutputPath>bin\Release\</OutputPath><DefineConstants>TRACE</DefineConstants><WarningLevel>4</WarningLevel><LangVersion>6</LangVersion>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <LangVersion>6</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" /><Reference Include="System.Core" /><Reference Include="System.Data" /><Reference Include="System.Xml" /><Reference Include="System.Drawing" /><Reference Include="System.Windows.Forms" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
-  <ItemGroup><Compile Include="Program.cs" /><Compile Include="Forms\*.cs" /></ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\aiRbPG.Domain\aiRbPG.Domain.csproj"><Project>{93C2D6EF-BB1C-441D-9B16-01243D51E0DE}</Project><Name>aiRbPG.Domain</Name></ProjectReference>
-    <ProjectReference Include="..\aiRbPG.Data\aiRbPG.Data.csproj"><Project>{525AEFDC-9219-4BA9-B28C-9DE32724A639}</Project><Name>aiRbPG.Data</Name></ProjectReference>
+    <Compile Include="Program.cs" />
+    <Compile Include="Forms\AdministrationForm.cs" />
+    <Compile Include="Forms\CatalogForm.cs" />
+    <Compile Include="Forms\CatalogKind.cs" />
+    <Compile Include="Forms\DashboardForm.cs" />
+    <Compile Include="Forms\InitialAdministratorForm.cs" />
+    <Compile Include="Forms\LoginForm.cs" />
+    <Compile Include="Forms\OperationForm.cs" />
+    <Compile Include="Forms\ReservationForm.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\aiRbPG.Domain\aiRbPG.Domain.csproj">
+      <Project>{93C2D6EF-BB1C-441D-9B16-01243D51E0DE}</Project>
+      <Name>aiRbPG.Domain</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\aiRbPG.Data\aiRbPG.Data.csproj">
+      <Project>{525AEFDC-9219-4BA9-B28C-9DE32724A639}</Project>
+      <Name>aiRbPG.Data</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
