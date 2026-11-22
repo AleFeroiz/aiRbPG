@@ -11,6 +11,8 @@ public sealed class SqlConnectionFactory
     {
         var connectionString = Environment.GetEnvironmentVariable(ConnectionEnvironmentVariable);
         if (string.IsNullOrWhiteSpace(connectionString))
+            connectionString = Environment.GetEnvironmentVariable(ConnectionEnvironmentVariable, EnvironmentVariableTarget.User);
+        if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
                 $"Defina a variável de ambiente {ConnectionEnvironmentVariable} com a conexão do SQL Server.");

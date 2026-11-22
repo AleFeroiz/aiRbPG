@@ -17,6 +17,9 @@ public sealed class CatalogForm : Form
     private readonly Dictionary<string, TextBox> _inputs = new Dictionary<string, TextBox>();
     private readonly Label _message = new Label();
     private int _selectedId;
+    private bool _refreshing;
+    private bool _saving;
+    private readonly Label _mode = new Label { Dock = DockStyle.Bottom, Height = 38, Padding = new Padding(22,8,0,0) };
 
     public CatalogForm(ICatalogRepository catalog, CatalogKind kind)
     {
@@ -69,6 +72,8 @@ public sealed class CatalogForm : Form
         _grid.BackgroundColor = Color.White;
         _grid.BorderStyle = BorderStyle.None;
         _grid.RowHeadersVisible = false;
+        _grid.AllowUserToAddRows = false;
+        _grid.AllowUserToDeleteRows = false;
         _grid.SelectionChanged += GridSelectionChanged;
 
         var editor = new TableLayoutPanel
@@ -128,6 +133,8 @@ public sealed class CatalogForm : Form
         shell.Controls.Add(_grid, 0, 0);
         shell.Controls.Add(editor, 1, 0);
         Controls.Add(shell);
+        Controls.Add(_mode);
+        _mode.Text = "Novo cadastro: preencha os campos e clique em Salvar.";
     }
 
     private IEnumerable<CatalogField> Fields()
@@ -170,6 +177,7 @@ public sealed class CatalogForm : Form
 
     private async Task RefreshRowsAsync()
     {
+        _refreshing = true;
         try
         {
             switch (_kind)
@@ -181,20 +189,23 @@ public sealed class CatalogForm : Form
                 default: _grid.DataSource = new object[0]; break;
             }
             _message.Text = string.Empty;
+            ClearInputs();
         }
         catch (Exception)
         {
             _message.Text = "Não foi possível carregar os dados. Confira a conexão e o script do banco.";
         }
+        finally { _refreshing = false; }
     }
 
     private void GridSelectionChanged(object sender, EventArgs e)
     {
-        if (_grid.CurrentRow == null || _grid.CurrentRow.DataBoundItem == null)
+        if (_refreshing || _grid.CurrentRow == null || !_grid.CurrentRow.Selected || _grid.CurrentRow.DataBoundItem == null)
         {
             return;
         }
         var selected = _grid.CurrentRow.DataBoundItem;
+        _mode.Text = "Editando registro selecionado. Use Novo para cadastrar outro.";
 
         var client = selected as Client;
         if (client != null)
@@ -238,6 +249,7 @@ public sealed class CatalogForm : Form
 
     private async void SaveAsync(object sender, EventArgs e)
     {
+        if (_saving) return;
         var name = Value("name").Trim();
         if (name.Length == 0)
         {
@@ -245,6 +257,7 @@ public sealed class CatalogForm : Form
             return;
         }
 
+        _saving = true;
         try
         {
             switch (_kind)
@@ -292,6 +305,7 @@ public sealed class CatalogForm : Form
         {
             _message.Text = "Não foi possível salvar: " + ex.Message;
         }
+        finally { _saving = false; }
     }
 
     private async void DeactivateAsync(object sender, EventArgs e)
@@ -351,12 +365,17 @@ public sealed class CatalogForm : Form
 
     private void ClearInputs()
     {
+        bool previous = _refreshing;
+        _refreshing = true;
         _selectedId = 0;
+        _grid.CurrentCell = null;
+        _grid.ClearSelection();
         foreach (var input in _inputs.Values)
         {
             input.Clear();
         }
-        _grid.ClearSelection();
+        _mode.Text = "Novo cadastro: preencha os campos e clique em Salvar.";
+        _refreshing = previous;
     }
 }
 

@@ -40,3 +40,14 @@
 - Adicionados tests/InterfaceHarness.cs e scripts/verificar-interface.ps1 para QA isolado; o script remove seu banco ao fechar o aplicativo de QA. A segunda instância de QA pode continuar aberta.
 - Pendências: concluir revisão de telas, gerar/revisar DOCX/PDF e dois diagramas finais, atualizar requisitos/manual, aplicar migração 002 ao banco de uso e empacotar entrega. Código novo passou 51 verificações em Release; a alteração posterior foi somente de layout e foi recompilada.
 - Pasta canônica em Zé/aiRbPG. Originais do professor e print em Zé/referencias. Cópia anterior C:\Meus Projetos\aiRbPG ainda preservada por bloqueio de movimentação; não é a cópia atual de desenvolvimento.
+
+## Correção dos cadastros e validação visual em 22/11/2026
+- Banco real aiRbPG estava sem HistoricoReservas; executadas migrações 001 e 002 preservando a conta e os registros existentes. SQL Server está rodando e a conexão integrada abriu com sucesso.
+- Cadastro inicia em modo Novo, sem selecionar automaticamente o primeiro registro. Novo limpa a seleção; seleção explícita habilita edição. Proteção contra duplo clique ao salvar. Conexão também consulta a configuração do usuário quando o processo não herdou a variável.
+- Adicionados INICIAR.cmd e scripts/iniciar.ps1: carregam a conexão atual, verificam o banco atualizado e abrem o executável Release canônico.
+- Verificado pelo Windows em banco QA isolado: cliente criado via Salvar com mensagem de sucesso e novo identificador na lista SQL; reserva criada via formulário; editor carregou os dados da reserva; confirmação refletiu na lista; usuários e relatório de recebimentos carregaram sem erro.
+- Corrigida atualização de estoque que zerava acessórios no editor. Nova revisão confirmou quantidade 2 antes e depois de Atualizar estoque. Participantes, observações e botões visíveis em janela restaurada e maximizada.
+- Capturas verificadas em docs/imagens: clientes.png, reservas.png, operacoes.png e relatorios.png. Bancos de QA removidos ao fechar as instâncias de teste. Não houve automação de senha da conta de uso.
+- Suíte Release repetida após correção do cadastro: 51 verificações aprovadas; ajuste posterior de preservação dos itens recompilado sem erros e validado visualmente.
+- Conteúdo da antiga cópia local movido para Zé/arquivo-anterior, preservado. No caminho antigo ficou apenas LEIA-ME.txt apontando para a versão atual.
+- Instalador oficial VS2015 Community Update 3 (14.0.25420.1, assinatura Microsoft válida) tentou instalar a IDE, mas retornou 1603 por pré-requisito indisponível. Tentativa por mídia offline em andamento; não declarar a IDE instalada antes de conferir.

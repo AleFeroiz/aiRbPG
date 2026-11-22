@@ -110,7 +110,7 @@ public sealed class ReservationForm : Form
         right.Controls.Add(_status, 0, 5);
         var buttons = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft };
         buttons.Controls.Add(Ui.Action("Salvar reserva", CreateAsync));
-        buttons.Controls.Add(Ui.Action("Nova / limpar",async () => { _editingId = 0; _editorTitle.Text = "Nova reserva"; _notes.Clear(); await LoadAccessoriesAsync(); }));
+        buttons.Controls.Add(Ui.Action("Nova / limpar",async () => { _editingId = 0; _editorTitle.Text = "Nova reserva"; _notes.Clear(); _accessories.DataSource = null; await LoadAccessoriesAsync(); }));
         buttons.Controls.Add(Button("Atualizar estoque", async (sender, args) => await LoadAccessoriesAsync()));
         buttons.Controls.Add(Ui.Action("Espaços livres",async () =>
         {
@@ -200,36 +200,33 @@ public sealed class ReservationForm : Form
             _editorTitle.Text = "Editar reserva #" + id;
         }
         finally { _loading = false; }
-        await LoadAccessoriesAsync();
-        var existing = await _operations.ItemsAsync(id);
-        foreach (DataGridViewRow gridRow in _accessories.Rows)
-        {
-            var found = existing.Rows.Cast<System.Data.DataRow>().FirstOrDefault(r => Convert.ToInt32(r["AcessorioId"]) == Convert.ToInt32(gridRow.Cells[0].Value));
-            if (found != null) gridRow.Cells[4].Value = Convert.ToInt32(found["Reservados"]);
-        }
+        await LoadAccessoriesAsync(true);
         UpdateQuote();
     }
 
-    private async Task LoadAccessoriesAsync()
+    private async Task LoadAccessoriesAsync(bool restoreSaved = false)
     {
         if (_loading) return;
         int version = ++_availabilityVersion;
         if (_end.Value <= _start.Value) { _status.Text = "O término deve ser posterior ao início."; return; }
         try
         {
+            var quantities = ReadAccessoryRows().ToDictionary(r => r.AccessoryId,r => r.Quantity);
             var availability = await _reservations.GetAvailableAccessoriesAsync(_start.Value, _end.Value);
             if (version != _availabilityVersion) return;
-            _accessories.DataSource = availability.Select(row => new AccessoryRow(row.Accessory.Id, row.Accessory.Name, row.Available, row.Accessory.HourlyRate, 0)).ToList();
+            _accessories.DataSource = availability.Select(row => new AccessoryRow(row.Accessory.Id, row.Accessory.Name, row.Available, row.Accessory.HourlyRate, quantities.ContainsKey(row.Accessory.Id) ? quantities[row.Accessory.Id] : 0)).ToList();
             if (_editingId != 0)
             {
                 var detail = await _operations.DetailsAsync(_editingId);
                 var ownItems = await _operations.ItemsAsync(_editingId);
                 if (version != _availabilityVersion) return;
-                if (detail.Rows.Count > 0 && Convert.ToDateTime(detail.Rows[0]["Inicio"]) < _end.Value && Convert.ToDateTime(detail.Rows[0]["Fim"]) > _start.Value)
-                    foreach (DataGridViewRow gridRow in _accessories.Rows)
+                bool overlaps = detail.Rows.Count > 0 && Convert.ToDateTime(detail.Rows[0]["Inicio"]) < _end.Value && Convert.ToDateTime(detail.Rows[0]["Fim"]) > _start.Value;
+                foreach (DataGridViewRow gridRow in _accessories.Rows)
                     {
                         var own = ownItems.Rows.Cast<System.Data.DataRow>().FirstOrDefault(r => Convert.ToInt32(r["AcessorioId"]) == Convert.ToInt32(gridRow.Cells[0].Value));
-                        if (own != null) ((AccessoryRow)gridRow.DataBoundItem).Available += Convert.ToInt32(own["Reservados"]);
+                        var model = (AccessoryRow)gridRow.DataBoundItem;
+                        if (own != null && overlaps) model.Available += Convert.ToInt32(own["Reservados"]);
+                        if (restoreSaved) model.Quantity = own == null ? 0 : Convert.ToInt32(own["Reservados"]);
                     }
                 _accessories.Refresh();
             }
@@ -266,6 +263,7 @@ public sealed class ReservationForm : Form
             var draft = new NewReservation(client.Id, space.Id, _user.Id, _start.Value, _end.Value, (int)_people.Value, string.IsNullOrWhiteSpace(_notes.Text) ? null : _notes.Text, rows.Where(row => row.Quantity > 0).Select(row => new ReservationAccessory(row.AccessoryId, row.Name, row.Quantity, row.Rate)).ToArray());
             var id = _editingId == 0 ? await _reservations.CreateAsync(draft) : await _reservations.UpdateAsync(_editingId,draft);
             _editingId = 0; _editorTitle.Text = "Nova reserva";
+            _accessories.DataSource = null;
             await RefreshReservationsAsync();
             await LoadAccessoriesAsync();
             _status.Text = $"Reserva #{id} salva.";
