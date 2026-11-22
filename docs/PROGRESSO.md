@@ -51,3 +51,10 @@
 - Suíte Release repetida após correção do cadastro: 51 verificações aprovadas; ajuste posterior de preservação dos itens recompilado sem erros e validado visualmente.
 - Conteúdo da antiga cópia local movido para Zé/arquivo-anterior, preservado. No caminho antigo ficou apenas LEIA-ME.txt apontando para a versão atual.
 - Instalador oficial VS2015 Community Update 3 (14.0.25420.1, assinatura Microsoft válida) tentou instalar a IDE, mas retornou 1603 por pré-requisito indisponível. Tentativa por mídia offline em andamento; não declarar a IDE instalada antes de conferir.
+
+## Revisão final do código e documentação
+- Solução ordenada com WinForms como primeiro projeto C#, facilitando a inicialização em uma cópia nova. Rebuild Debug final: 51 verificações aprovadas; Release atualizado sem erros/avisos. Log em Zé/.revisao/testes/testes-debug.txt.
+- Documentação DOCX e PDF com 14 páginas, requisitos consolidados, regras, dois diagramas UML, dados, instalação, manual e conferência do enunciado. Todas as páginas renderizadas pelo Word e inspecionadas. O renderizador padrão falhou por ausência de LibreOffice; exportação nativa do Word usada, sem alterar o original do professor.
+- Corrigida borda herdada do estilo de título; versão final reexportada. Comparação dos PNGs mostrou alteração somente nas páginas 1 e 6, reinspecionadas. Diagramas PNG e fontes PlantUML coerentes; fontes UML iniciais preservadas em Zé/referencias/uml-inicial.
+- Requisitos distinguem funcionalidades implementadas de kits opcionais, e deixam claros os limites: sem estorno, cobrança online, recuperação de senha, multa automática ou teste de carga. Conferência cobre cada exigência do professor.
+- Mídia oficial VS2015 Update 3 completa, 7.617.847.296 bytes, montada somente leitura em F:. Instalador 14.0.25420.1 com assinatura Microsoft válida; instalação offline iniciada. Ainda aguardando resultado.

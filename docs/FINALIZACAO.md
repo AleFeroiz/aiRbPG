@@ -8,10 +8,10 @@ Aplicação desktop C# / SQL Server, compilável com ferramentas VS2015, documen
 
 - [x] Ler enunciado e conferir implementação existente.
 - [x] Reunir código e referências na pasta Zé; histórico Git preservado.
-- [ ] Completar ciclo de reserva, pagamento, retirada/devolução e relatórios.
-- [ ] Gerenciar atendentes e aplicar permissões.
-- [ ] Testar regras, persistência e interface sem alterar os dados de uso.
-- [ ] Gerar documentação DOCX/PDF com dois diagramas e manual.
+- [x] Completar ciclo de reserva, pagamento, retirada/devolução e relatórios.
+- [x] Gerenciar atendentes e aplicar permissões.
+- [x] Testar regras, persistência e interface sem alterar os dados de uso.
+- [x] Gerar documentação DOCX/PDF com dois diagramas e manual.
 - [ ] Revisar e empacotar entrega com fontes, SQL e integrantes.
 
 ## Decisões de implementação

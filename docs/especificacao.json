@@ -1,0 +1,212 @@
+{
+  "integrantes": [
+    "Alessandro Silva Vieira",
+    "Felipe Gabriel Leite Moreira",
+    "Mayzon Rezende do Nascimento"
+  ],
+  "requisitos_funcionais": [
+    [
+      "RF01",
+      "Autenticar usuário ativo por login e senha.",
+      "Implementado"
+    ],
+    [
+      "RF02",
+      "Restringir operações pelos perfis Administrador e Atendente.",
+      "Implementado"
+    ],
+    [
+      "RF03",
+      "Cadastrar, consultar, alterar e inativar clientes.",
+      "Implementado"
+    ],
+    [
+      "RF04",
+      "Manter espaços, capacidade, endereço e tarifas.",
+      "Implementado"
+    ],
+    [
+      "RF05",
+      "Manter o catálogo de sistemas de RPG.",
+      "Implementado"
+    ],
+    [
+      "RF06",
+      "Manter acessórios, quantidade em estoque e tarifa.",
+      "Implementado"
+    ],
+    [
+      "RF07",
+      "Montar kits temáticos compostos por acessórios.",
+      "Opcional futuro"
+    ],
+    [
+      "RF08",
+      "Consultar espaços livres e acessórios disponíveis por período.",
+      "Implementado"
+    ],
+    [
+      "RF09",
+      "Criar reserva com cliente, espaço, período e participantes.",
+      "Implementado"
+    ],
+    [
+      "RF10",
+      "Alterar reserva antes da retirada e sem pagamento, revalidando disponibilidade.",
+      "Implementado"
+    ],
+    [
+      "RF11",
+      "Cancelar reserva pendente ou confirmada, sem pagamento, preservando o histórico.",
+      "Implementado"
+    ],
+    [
+      "RF12",
+      "Adicionar acessórios e suas quantidades à reserva.",
+      "Implementado"
+    ],
+    [
+      "RF13",
+      "Calcular valor por horas, pessoas e acessórios, acrescido de multas e menos descontos.",
+      "Implementado"
+    ],
+    [
+      "RF14",
+      "Registrar retirada integral dos itens de reserva confirmada.",
+      "Implementado"
+    ],
+    [
+      "RF15",
+      "Registrar devoluções parciais, danos, perdas e multa manual justificada.",
+      "Implementado"
+    ],
+    [
+      "RF16",
+      "Registrar pagamentos manuais parciais, sem ultrapassar o saldo.",
+      "Implementado"
+    ],
+    [
+      "RF17",
+      "Controlar os estados até cancelamento ou finalização.",
+      "Implementado"
+    ],
+    [
+      "RF18",
+      "Consultar reservas por nome do cliente ou espaço e por estado.",
+      "Implementado"
+    ],
+    [
+      "RF19",
+      "Consultar estoque comprometido e disponível no intervalo escolhido.",
+      "Implementado"
+    ],
+    [
+      "RF20",
+      "Consultar recebimentos por data e método, somente como Administrador.",
+      "Implementado"
+    ],
+    [
+      "RF21",
+      "Consultar acessórios mais reservados em um período.",
+      "Implementado"
+    ],
+    [
+      "RF22",
+      "Cadastrar usuários e ativar ou inativar contas, como Administrador.",
+      "Implementado"
+    ],
+    [
+      "RF23",
+      "Consultar histórico de ações e operador responsável em cada reserva.",
+      "Implementado"
+    ]
+  ],
+  "requisitos_nao_funcionais": [
+    [
+      "RNF01",
+      "Executar em Windows com interface C# Windows Forms."
+    ],
+    [
+      "RNF02",
+      "Persistir os dados em Microsoft SQL Server com acesso ADO.NET."
+    ],
+    [
+      "RNF03",
+      "Armazenar senha com PBKDF2 HMAC SHA256, salt aleatório e 210 mil iterações."
+    ],
+    [
+      "RNF04",
+      "Usar parâmetros SQL nas entradas de dados."
+    ],
+    [
+      "RNF05",
+      "Validar campos obrigatórios, limites, capacidade, período e quantidades."
+    ],
+    [
+      "RNF06",
+      "Usar transações nas operações de reserva, pagamento e devolução."
+    ],
+    [
+      "RNF07",
+      "Inativar cadastros e preservar referências e histórico."
+    ],
+    [
+      "RNF08",
+      "Separar domínio, dados e interface em projetos da solução."
+    ],
+    [
+      "RNF09",
+      "Buscar resposta de até três segundos nas operações usuais da demonstração. Meta dependente do ambiente; não homologada para grande carga."
+    ],
+    [
+      "RNF10",
+      "Fornecer scripts de criação, migração e carga demonstrativa."
+    ],
+    [
+      "RNF11",
+      "Manter formato clássico de projeto, C# 6 e .NET Framework 4.6.1 para VS2015 Update 2 ou posterior."
+    ],
+    [
+      "RNF12",
+      "Fornecer configuração reproduzível da conexão e pacote sem senhas ou arquivos de banco."
+    ]
+  ],
+  "regras": [
+    [
+      "Agenda",
+      "Um espaço não admite reservas abertas com períodos sobrepostos. Intervalos adjacentes são permitidos. Uma locação ainda em andamento pode continuar bloqueando a agenda após o término previsto."
+    ],
+    [
+      "Estoque",
+      "A soma dos acessórios comprometidos no período não pode exceder o estoque utilizável. Devoluções liberam itens; danos e perdas reduzem o estoque. A redução administrativa é conservadora e não pode ficar abaixo do total comprometido em reservas abertas."
+    ],
+    [
+      "Capacidade",
+      "O período deve ter término posterior ao início, pelo menos um participante e participantes dentro da capacidade do espaço."
+    ],
+    [
+      "Preço",
+      "O total soma espaço por hora, participantes por hora quando houver tarifa, acessórios por unidade e hora, multas e descontos. Os subtotais são arredondados para centavos; as tarifas aplicadas ficam gravadas na reserva."
+    ],
+    [
+      "Permissões",
+      "Somente Administrador altera catálogos de espaços, acessórios e sistemas, tarifas, descontos, usuários e relatórios financeiros. Atendente mantém clientes e opera as reservas."
+    ],
+    [
+      "Alteração e cancelamento",
+      "Só são permitidos antes da retirada, em Pendente ou Confirmada e sem pagamento. A alteração reaplica tarifas atuais e zera o desconto anterior. O cancelamento não apaga dados. Não há estorno no aplicativo."
+    ],
+    [
+      "Pagamento",
+      "O valor deve ser positivo, ter até duas casas decimais e não exceder o saldo. Dinheiro, Pix, Cartão e Transferência são registros manuais; não movimentam contas bancárias."
+    ],
+    [
+      "Movimentação",
+      "A retirada é integral e exige confirmação. A devolução pode ser parcial e separa boas, danificadas e perdidas. Quantidades não podem exceder a retirada em aberto. Multa é informada e justificada pelo operador."
+    ],
+    [
+      "Encerramento",
+      "A finalização exige resolução de todos os itens retirados e saldo financeiro zero. Reservas canceladas ou finalizadas não recebem novos pagamentos."
+    ]
+  ]
+}

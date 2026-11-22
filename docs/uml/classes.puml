@@ -1,144 +1,65 @@
 @startuml
 skinparam classAttributeIconSize 0
-
-enum PerfilUsuario {
-  Administrador
-  Atendente
-}
-
-enum StatusReserva {
-  Pendente
-  Confirmada
-  Cancelada
-  EmAndamento
-  AguardandoDevolucao
-  Finalizada
-}
-
-class Usuario {
-  +int UsuarioId
-  +string Nome
-  +string Login
-  +string SenhaHash
-  +PerfilUsuario Perfil
-  +bool Ativo
-}
-
 class Cliente {
-  +int ClienteId
-  +string Nome
-  +string Telefone
-  +string Email
-  +bool Ativo
+  +id: int
+  +nome: string
+  +contato: string
+  +ativo: bool
 }
-
+class Usuario {
+  +id: int
+  +login: string
+  +perfil: PerfilUsuario
+  +ativo: bool
+}
 class Espaco {
-  +int EspacoId
-  +string Nome
-  +string Endereco
-  +int Capacidade
-  +decimal TarifaHora
-  +decimal TarifaPessoaHora
-  +bool Ativo
+  +id: int
+  +capacidade: int
+  +tarifaHora: decimal
+  +tarifaPessoa: decimal
 }
-
-class SistemaRpg {
-  +int SistemaRpgId
-  +string Nome
-  +string Descricao
-  +bool Ativo
-}
-
-class SistemasAcessorios {
-  +int SistemaRpgId
-  +int AcessorioId
-}
-
-class Acessorio {
-  +int AcessorioId
-  +string Nome
-  +int QuantidadeEstoque
-  +decimal TarifaHora
-  +bool Ativo
-}
-
-class Kit {
-  +int KitId
-  +string Nome
-  +string Descricao
-  +bool Ativo
-}
-
-class ItemKit {
-  +int KitId
-  +int AcessorioId
-  +int Quantidade
-}
-
 class Reserva {
-  +int ReservaId
-  +DateTime Inicio
-  +DateTime Fim
-  +int NumeroParticipantes
-  +StatusReserva Status
-  +decimal Horas
-  +decimal TarifaEspacoHoraAplicada
-  +decimal TarifaPessoaHoraAplicada
-  +decimal SubtotalEspaco
-  +decimal SubtotalPessoas
-  +decimal Desconto
-  +decimal Multas
-  +decimal ValorTotal
-  +ValidarDisponibilidade()
-  +CalcularTotal()
+  +id: int
+  +inicio: DateTime
+  +fim: DateTime
+  +pessoas: int
+  +status: StatusReserva
+  +total: decimal
+  +multas: decimal
+  +desconto: decimal
 }
-
+class Acessorio {
+  +id: int
+  +nome: string
+  +estoque: int
+  +tarifaHora: decimal
+}
 class ItemReserva {
-  +int ItemReservaId
-  +int QuantidadeReservada
-  +int QuantidadeRetirada
-  +int QuantidadeDevolvida
-  +int QuantidadeDanificada
-  +int QuantidadePerdida
-  +decimal TarifaHoraAplicada
-  +decimal Subtotal
+  +id: int
+  +reservados: int
+  +retirados: int
+  +devolvidos: int
+  +danos: int
+  +perdas: int
 }
-
 class Pagamento {
-  +int PagamentoId
-  +DateTime DataHora
-  +decimal Valor
-  +string Metodo
-  +string Observacao
+  +id: int
+  +dataHora: DateTime
+  +valor: decimal
+  +metodo: string
 }
-
-PerfilUsuario --> Usuario
-StatusReserva --> Reserva
+class HistoricoReserva {
+  +id: int
+  +dataHora: DateTime
+  +acao: string
+  +observacao: string
+}
 Cliente "1" -- "0..*" Reserva
+Usuario "1" -- "0..*" Reserva
 Espaco "1" -- "0..*" Reserva
-Usuario "1" -- "0..*" Reserva : registra
 Reserva "1" *-- "0..*" ItemReserva
 Acessorio "1" -- "0..*" ItemReserva
-SistemaRpg "1" -- "0..*" SistemasAcessorios
-Acessorio "1" -- "0..*" SistemasAcessorios
-Kit "1" *-- "1..*" ItemKit
-Acessorio "1" -- "0..*" ItemKit
 Reserva "1" *-- "0..*" Pagamento
-
-note right of Reserva
-  Fim deve ser posterior ao início.
-  Não há conflito de espaço ou estoque
-  entre reservas que bloqueiam agenda.
-  Estimativa atual: espaço por hora,
-  pessoa por hora e acessórios por hora,
-  além de multas e descontos.
-  Fórmula pendente de aprovação do grupo.
-end note
-
-note bottom of SistemasAcessorios
-  Associação N:N deixa o catálogo livre
-  para vincular um acessório a vários
-  sistemas de RPG.
-end note
-
+Reserva "1" *-- "0..*" HistoricoReserva
+Usuario "1" -- "0..*" HistoricoReserva
 @enduml

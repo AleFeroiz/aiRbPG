@@ -5,11 +5,11 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aiRbPG.WinForms", "src\aiRbPG.WinForms\aiRbPG.WinForms.csproj", "{96B8AA01-21CD-4A46-A1E2-EFDB11E9096F}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aiRbPG.Domain", "src\aiRbPG.Domain\aiRbPG.Domain.csproj", "{93C2D6EF-BB1C-441D-9B16-01243D51E0DE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aiRbPG.Data", "src\aiRbPG.Data\aiRbPG.Data.csproj", "{525AEFDC-9219-4BA9-B28C-9DE32724A639}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "aiRbPG.WinForms", "src\aiRbPG.WinForms\aiRbPG.WinForms.csproj", "{96B8AA01-21CD-4A46-A1E2-EFDB11E9096F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

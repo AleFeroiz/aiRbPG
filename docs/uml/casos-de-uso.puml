@@ -1,60 +1,30 @@
 @startuml
 left to right direction
-skinparam packageStyle rectangle
-
-actor "Atendente" as Atendente
-actor "Administrador" as Admin
-Admin --|> Atendente
-
-rectangle "Airbnb de RPG" {
-  usecase "Fazer login" as UCLogin
-  usecase "Gerenciar clientes" as UCClientes
-  usecase "Gerenciar espaços" as UCEspacos
-  usecase "Gerenciar sistemas de RPG" as UCSistemas
-  usecase "Gerenciar acessórios e estoque" as UCAcessorios
-  usecase "Gerenciar kits temáticos" as UCKits
-  usecase "Consultar disponibilidade" as UCDisponibilidade
-  usecase "Criar / alterar / cancelar reserva" as UCReserva
-  usecase "Adicionar acessórios à reserva" as UCItens
-  usecase "Validar horário, capacidade e estoque" as UCValidacoes
-  usecase "Calcular valor da reserva" as UCCalcular
-  usecase "Registrar pagamento manual" as UCPagamento
-  usecase "Registrar retirada e devolução" as UCDevolucao
-  usecase "Registrar dano / perda e multa" as UCMulta
-  usecase "Consultar reservas" as UCConsulta
-  usecase "Consultar estoque por período" as UCEstoque
-  usecase "Alterar tarifas" as UCTarifa
-  usecase "Consultar faturamento" as UCFaturamento
-  usecase "Consultar itens mais alugados" as UCMaisAlugados
+actor Atendente
+actor Administrador
+Administrador --|> Atendente
+rectangle aiRbPG {
+usecase "Fazer login" as Login
+usecase "Manter clientes" as Clientes
+usecase "Consultar disponibilidade" as Disponibilidade
+usecase "Criar alterar e cancelar reservas" as Reserva
+usecase "Consultar reservas" as Consulta
+usecase "Registrar pagamentos" as Pagamento
+usecase "Registrar retirada e devolução" as Devolucao
+usecase "Confirmar e finalizar" as Finalizar
+usecase "Manter catálogos e tarifas" as Catalogos
+usecase "Gerenciar usuários" as Usuarios
+usecase "Consultar relatórios e conceder desconto" as Relatorios
 }
-
-Atendente --> UCLogin
-Atendente --> UCClientes
-Atendente --> UCDisponibilidade
-Atendente --> UCReserva
-Atendente --> UCItens
-Atendente --> UCPagamento
-Atendente --> UCDevolucao
-Atendente --> UCConsulta
-Atendente --> UCEstoque
-
-Admin --> UCEspacos
-Admin --> UCSistemas
-Admin --> UCAcessorios
-Admin --> UCKits
-Admin --> UCTarifa
-Admin --> UCFaturamento
-Admin --> UCMaisAlugados
-
-UCReserva .> UCValidacoes : <<include>>
-UCReserva .> UCCalcular : <<include>>
-UCReserva .> UCDisponibilidade : <<include>>
-UCDevolucao .> UCMulta : <<extend>>
-UCCalcular .> UCMulta : <<include>>
-
-note bottom of Admin
-  O Administrador também pode executar
-  as operações disponíveis ao Atendente.
-end note
-
+Atendente -- Login
+Atendente -- Clientes
+Atendente -- Disponibilidade
+Atendente -- Reserva
+Atendente -- Consulta
+Atendente -- Pagamento
+Atendente -- Devolucao
+Atendente -- Finalizar
+Administrador -- Catalogos
+Administrador -- Usuarios
+Administrador -- Relatorios
 @enduml

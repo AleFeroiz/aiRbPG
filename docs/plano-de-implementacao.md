@@ -1,52 +1,27 @@
-# Plano de preparação e implementação
+# Plano e estado da entrega
 
-## Decisões tomadas nesta preparação
+## Concluído na aplicação
 
-- Interface desktop com C# e Windows Forms, alinhada ao plano da disciplina.
-- SQL Server como banco relacional.
-- Produto com três perfis: Administrador, Atendente e Cliente sem acesso ao aplicativo.
-- O grupo tem até três integrantes e prevê entrega/demonstração em 24/11/2026.
-- Compatibilidade solicitada: Visual Studio 2015 Update 2 ou posterior, C# 6 e .NET Framework 4.6.1. Os projetos usam o formato clássico `.csproj`; execução e validação de WinForms devem ser feitas em Windows.
-- Nome do projeto aiRbPG; três integrantes confirmados; entrega documental em DOCX e PDF.
-- Separar formulários, regras de negócio e acesso a dados para facilitar manutenção e demonstração.
-- Repositório local Git com documentação e arquivos de configuração versionáveis; dados locais, builds e credenciais ficam fora do versionamento.
+C# 6, WinForms e .NET Framework 4.6.1 preservados. Cadastros, autenticação/perfis, reservas, disponibilidade, alteração/confirmação/cancelamento, pagamentos manuais, retirada/devolução, danos/perdas, descontos, histórico, usuários e relatórios implementados. Banco de uso atualizado com a migração de histórico, preservando conta e dados.
 
-## Decisões ainda pendentes
+As regras demonstrativas e os limites são os requisitos consolidados em requisitos.md e especificacao.json. Kits e associações de catálogo continuam opcionais, fora da interface. Não confundir o planejamento inicial com funcionalidades entregues.
 
-- Compilação Debug e Release validada no Windows com Build Tools 2015 e Developer Pack 4.6.1. Abertura/Designer/F5 na IDE 2015 ainda pendentes; ver PROGRESSO.md.
-- Ambiente local preparado com SQL Server 2022 Express em localhost\SQLEXPRESS. A máquina/instância da demonstração do grupo ainda precisa ser confirmada.
-- Método de acesso definido nesta implementação: ADO.NET com `System.Data.SqlClient` integrado ao .NET Framework e consultas parametrizadas.
-- Fórmula de preço a partir de horas, participantes e acessórios; taxas extras, caução, descontos e política de cancelamento.
-- Status e transições; regras de pagamento, retirada, devolução, atraso, dano e perda.
-- Dois requisitos não funcionais e quatro regras de negócio ainda não detalhados no resumo recebido.
+## Evidências
 
-## Estrutura atual da solução
+51 verificações de integração aprovadas em Release, compiladas com MSBuild 14.0. Cadastro de cliente e reserva, editor, confirmação e relatórios verificados pela interface Windows em banco isolado. Quantidade de acessórios preservada após atualização. Veja PROGRESSO.md.
 
-```text
-src/
-  aiRbPG.WinForms/            # formulários e interação
-  aiRbPG.Domain/              # modelos e regras de negócio
-  aiRbPG.Data/                # conexão e repositórios SQL Server
-database/
-  scripts/                    # criação do banco e carga demonstrativa
-docs/
-```
+## Documentação e pacote
 
-O acesso a dados usa ADO.NET com `System.Data.SqlClient` e consultas parametrizadas. A interface WinForms compila para Windows; no Linux é possível editar arquivos e preparar o código, mas não executar nem validar visualmente os formulários.
+Documento DOCX/PDF em documentacao, com requisitos, dois diagramas UML, regras, dados, instalação, manual, verificações e conferência do enunciado. Pacote em ../../entrega. Orientações originais em ../../referencias. Não enviar bancos, senhas, instaladores ou pastas de ferramentas.
 
-## Etapas sugeridas
+## Validação específica da IDE
 
-1. Completar requisitos com nomes do grupo e confirmar lacunas com professor/integrantes.
-2. Revisar os diagramas UML iniciais de casos de uso e classes.
-3. Fechar o modelo relacional e preparar scripts SQL Server de criação e carga demonstrativa.
-4. Instalar o Visual Studio 2015 Update 2 (ou posterior) e o .NET Framework 4.6.1 Developer Pack; abrir e compilar a solução no computador Windows.
-5. Preparar a instância SQL Server no Windows, executar o script e configurar `AIRBPG_SQL_CONNECTION`.
-6. Validar login/permissões, cadastros e fluxo mínimo de reservas no Windows.
-7. Implementar alteração/cancelamento, retirada/devolução, pagamentos, multas e consultas/relatórios priorizados.
-8. Preparar dados de demonstração, documentação DOCX/PDF e roteiro para a P2 de 24/11/2026.
+Ferramentas 2015 instaladas e usadas. Instalação da IDE completa por mídia offline em acompanhamento; o resultado e eventuais limites devem ser registrados no progresso. Não declarar teste de Designer/F5 sem executá-lo.
 
-## Fluxo Git sugerido
+## Estrutura
 
-- Commits pequenos com mensagens objetivas, por exemplo `docs: define requisitos iniciais`.
-- Usar branches para mudanças maiores quando o grupo começar a trabalhar em paralelo.
-- Não versionar senhas, arquivos locais de banco, pastas `.vs`, `bin` ou `obj`.
+src/aiRbPG.WinForms: formulários; src/aiRbPG.Domain: regras e modelos; src/aiRbPG.Data: SQL parametrizado e transações; database/scripts: migrações; tests: verificações; scripts: configuração, inicialização e empacotamento.
+
+## Git
+
+Commits locais pequenos, conforme AGENTS.md. Não houve autorização de push nesta finalização. Arquivos de banco, senhas e resultados de build ficam fora do Git.

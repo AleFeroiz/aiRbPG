@@ -5,6 +5,7 @@ if ([string]::IsNullOrWhiteSpace($env:AIRBPG_SQL_CONNECTION)) {
     throw 'Conexao ausente. Execute scripts\configurar-banco.ps1 antes de iniciar.'
 }
 $exe = Join-Path $root 'src\aiRbPG.WinForms\bin\Release\aiRbPG.WinForms.exe'
+if (!(Test-Path $exe)) { $exe = Join-Path $root '..\Aplicativo\aiRbPG.WinForms.exe' }
 if (!(Test-Path $exe)) { throw 'Compile a solucao em Release antes de iniciar.' }
 Add-Type -AssemblyName System.Data
 $connection = New-Object System.Data.SqlClient.SqlConnection $env:AIRBPG_SQL_CONNECTION
