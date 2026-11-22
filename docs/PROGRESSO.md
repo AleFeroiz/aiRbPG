@@ -33,3 +33,10 @@
 - Correções: entradas de quantidades inválidas não viram zero silenciosamente; valores arredondados por item; campos de reserva com espaço adequado; consulta de espaços livres distingue identificadores.
 - Primeira suíte Debug: 45 verificações aprovadas. Suíte ampliada Release: 51 verificações aprovadas, zero erros/avisos de compilação com MSBuild 14.0. Script scripts/testar.ps1 cria banco único aiRbPG_Test_*, aplica migrações e remove-o em finally. Dados de uso não alterados por testes.
 - Verificação visual e documentação final em andamento; não confundir build pelas ferramentas 2015 com teste de Designer/F5 na IDE 2015.
+
+## Revisão visual interrompida
+- Painel e primeira versão da tela de reservas observados em banco aiRbPG_UI_* isolado. Detectado layout que ocultava participantes/observações; corrigidas alturas e proporções, versão Release recompilada sem erro/aviso.
+- A segunda revisão não foi concluída: o controle do Windows foi interrompido pelo usuário com Escape. Não afirmar validação visual do ajuste nem entrega final.
+- Adicionados tests/InterfaceHarness.cs e scripts/verificar-interface.ps1 para QA isolado; o script remove seu banco ao fechar o aplicativo de QA. A segunda instância de QA pode continuar aberta.
+- Pendências: concluir revisão de telas, gerar/revisar DOCX/PDF e dois diagramas finais, atualizar requisitos/manual, aplicar migração 002 ao banco de uso e empacotar entrega. Código novo passou 51 verificações em Release; a alteração posterior foi somente de layout e foi recompilada.
+- Pasta canônica em Zé/aiRbPG. Originais do professor e print em Zé/referencias. Cópia anterior C:\Meus Projetos\aiRbPG ainda preservada por bloqueio de movimentação; não é a cópia atual de desenvolvimento.

@@ -90,12 +90,12 @@ public sealed class ReservationForm : Form
 
         var right = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 7 };
         right.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
-        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 170));
+        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 210));
         right.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
         right.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         right.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
         right.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
-        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 42));
+        right.RowStyles.Add(new RowStyle(SizeType.Absolute, 88));
         right.Controls.Add(_editorTitle, 0, 0);
         right.Controls.Add(BuildFields(), 0, 1);
         right.Controls.Add(new Label { Text = "Acessórios adicionais (disponibilidade no período)", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft }, 0, 2);
@@ -133,6 +133,7 @@ public sealed class ReservationForm : Form
     private Control BuildFields()
     {
         var table = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 3 };
+        for (int i = 0; i < 3; i++) table.RowStyles.Add(new RowStyle(SizeType.Percent, 100F / 3F));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50));
         AddField(table, "Cliente", _client, 0, 0);
