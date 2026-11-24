@@ -1,4 +1,5 @@
 using aiRbPG.Domain.Catalog;
+using aiRbPG.Domain;
 using System.Globalization;
 using System;
 using System.Collections.Generic;
@@ -283,10 +284,11 @@ public sealed class CatalogForm : Form
         _saving = true;
         try
         {
+            OperationResult<bool> result;
             switch (_kind)
             {
                 case CatalogKind.Clients:
-                    await _catalog.SaveClientAsync(new Client(_selectedId, name, Optional("phone"), Optional("email")));
+                    result = await _catalog.SaveClientAsync(new Client(_selectedId, name, Optional("phone"), Optional("email")));
                     break;
                 case CatalogKind.Spaces:
                     int capacity;
@@ -302,10 +304,10 @@ public sealed class CatalogForm : Form
                         return;
                     }
 
-                    await _catalog.SaveSpaceAsync(new RpgSpace(_selectedId, name, Optional("description"), Optional("address"), capacity, spaceRate, personRate));
+                    result = await _catalog.SaveSpaceAsync(new RpgSpace(_selectedId, name, Optional("description"), Optional("address"), capacity, spaceRate, personRate));
                     break;
                 case CatalogKind.RpgSystems:
-                    await _catalog.SaveRpgSystemAsync(new RpgSystem(_selectedId, name, Optional("description")));
+                    result = await _catalog.SaveRpgSystemAsync(new RpgSystem(_selectedId, name, Optional("description")));
                     break;
                 case CatalogKind.Accessories:
                     int stock;
@@ -317,9 +319,11 @@ public sealed class CatalogForm : Form
                         return;
                     }
 
-                    await _catalog.SaveAccessoryAsync(new Accessory(_selectedId, name, Optional("description"), stock, accessoryRate));
+                    result = await _catalog.SaveAccessoryAsync(new Accessory(_selectedId, name, Optional("description"), stock, accessoryRate));
                     break;
+                default: return;
             }
+            if (!result.Succeeded) { _message.Text = result.Error; return; }
 
             ClearInputs();
             await RefreshRowsAsync("Cadastro salvo.");
@@ -353,13 +357,16 @@ public sealed class CatalogForm : Form
         _saving = true;
         try
         {
+            OperationResult<bool> result;
             switch (_kind)
             {
-                case CatalogKind.Clients: await _catalog.DeactivateClientAsync(_selectedId); break;
-                case CatalogKind.Spaces: await _catalog.DeactivateSpaceAsync(_selectedId); break;
-                case CatalogKind.RpgSystems: await _catalog.DeactivateRpgSystemAsync(_selectedId); break;
-                case CatalogKind.Accessories: await _catalog.DeactivateAccessoryAsync(_selectedId); break;
+                case CatalogKind.Clients: result = await _catalog.DeactivateClientAsync(_selectedId); break;
+                case CatalogKind.Spaces: result = await _catalog.DeactivateSpaceAsync(_selectedId); break;
+                case CatalogKind.RpgSystems: result = await _catalog.DeactivateRpgSystemAsync(_selectedId); break;
+                case CatalogKind.Accessories: result = await _catalog.DeactivateAccessoryAsync(_selectedId); break;
+                default: return;
             }
+            if (!result.Succeeded) { _message.Text = result.Error; return; }
 
             ClearInputs();
             await RefreshRowsAsync("Cadastro inativado.");

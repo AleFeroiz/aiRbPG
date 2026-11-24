@@ -12,7 +12,7 @@ public interface IUserRepository
         string login,
         CancellationToken cancellationToken = default(CancellationToken));
 
-    Task CreateFirstAdministratorAsync(
+    Task<OperationResult<bool>> CreateFirstAdministratorAsync(
         string fullName,
         string login,
         byte[] passwordSalt,

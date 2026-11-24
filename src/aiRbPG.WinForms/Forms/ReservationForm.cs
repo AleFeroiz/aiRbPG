@@ -1,4 +1,4 @@
-﻿using aiRbPG.Domain.Catalog;
+using aiRbPG.Domain.Catalog;
 using aiRbPG.Domain.Pricing;
 using aiRbPG.Domain.Reservations;
 using aiRbPG.Domain.Users;
@@ -82,7 +82,7 @@ public sealed class ReservationForm : Form
         _filterStatus.Items.AddRange(new object[] { "Todos","Pendente","Confirmada","EmAndamento","AguardandoDevolucao","Finalizada","Cancelada" });
         _filterStatus.SelectedIndex = 0;
         tools.Controls.Add(new Label { Text = "Buscar cliente / espaço", AutoSize = true }); tools.Controls.Add(_search); tools.Controls.Add(_filterStatus);
-        tools.Controls.Add(Ui.Action("Operar selecionada",async () => { int id = SelectedId(); using (var form = new OperationForm(id,_operations,_user)) form.ShowDialog(this); await RefreshReservationsAsync(); await LoadAccessoriesAsync(); }));
+        tools.Controls.Add(Ui.Action("Operar selecionada",async () => { int id = SelectedId(); if (id == 0) return; using (var form = new OperationForm(id,_operations,_user)) form.ShowDialog(this); await RefreshReservationsAsync(); await LoadAccessoriesAsync(); }));
         tools.Controls.Add(Ui.Action("Carregar para editar",LoadSelectedAsync));
         tools.Controls.Add(Ui.Action("Atualizar lista",RefreshReservationsAsync));
         _search.TextChanged += (s,e) => ApplyFilter(); _filterStatus.SelectedIndexChanged += (s,e) => ApplyFilter();
@@ -114,7 +114,7 @@ public sealed class ReservationForm : Form
         buttons.Controls.Add(Button("Atualizar estoque", async (sender, args) => await LoadAccessoriesAsync()));
         buttons.Controls.Add(Ui.Action("Espaços livres",async () =>
         {
-            if (_end.Value <= _start.Value) throw new ArgumentException("Período inválido.");
+            if (_end.Value <= _start.Value) { _status.Text = "Período inválido."; return; }
             var reservations = await _reservations.GetReservationsAsync();
             var spaces = await _catalog.GetSpacesAsync();
             _space.DataSource = spaces.Where(s => !reservations.Any(r => r.Id != _editingId && r.SpaceId == s.Id && r.Status != "Cancelada" && r.Status != "Finalizada" && r.Start < _end.Value && (r.End > _start.Value || r.Status == "EmAndamento" || r.Status == "AguardandoDevolucao"))).ToList();
@@ -183,15 +183,19 @@ public sealed class ReservationForm : Form
     }
     private int SelectedId()
     {
-        if (_list.CurrentRow == null) throw new InvalidOperationException("Selecione uma reserva na lista.");
+        if (_list.CurrentRow == null) { _status.Text = "Selecione uma reserva na lista."; return 0; }
         return Convert.ToInt32(_list.CurrentRow.Cells["Codigo"].Value);
     }
     private async Task LoadSelectedAsync()
     {
-        int id = SelectedId(); var table = await _operations.DetailsAsync(id);
-        if (table.Rows.Count == 0) return;
+        int id = SelectedId();
+        if (id == 0) return;
+        var result = await _operations.DetailsAsync(id);
+        if (!result.Succeeded) { _status.Text = result.Error; return; }
+        var table = result.Value;
+        if (table.Rows.Count == 0) { _status.Text = "Reserva não encontrada."; return; }
         var row = table.Rows[0]; string state = Convert.ToString(row["Status"]);
-        if ((state != "Pendente" && state != "Confirmada") || Convert.ToDecimal(row["Pago"]) != 0) throw new InvalidOperationException("Só edite reservas pendentes/confirmadas sem pagamento.");
+        if ((state != "Pendente" && state != "Confirmada") || Convert.ToDecimal(row["Pago"]) != 0) { _status.Text = "Só edite reservas pendentes/confirmadas sem pagamento."; return; }
         _loading = true;
         try
         {
@@ -211,15 +215,20 @@ public sealed class ReservationForm : Form
         if (_end.Value <= _start.Value) { _status.Text = "O término deve ser posterior ao início."; return; }
         try
         {
-            var quantities = ReadAccessoryRows().ToDictionary(r => r.AccessoryId,r => r.Quantity);
+            var rows = ReadAccessoryRows();
+            if (rows == null) return;
+            var quantities = rows.ToDictionary(r => r.AccessoryId,r => r.Quantity);
             var availability = await _reservations.GetAvailableAccessoriesAsync(_start.Value, _end.Value);
             if (version != _availabilityVersion) return;
             _accessories.DataSource = availability.Select(row => new AccessoryRow(row.Accessory.Id, row.Accessory.Name, row.Available, row.Accessory.HourlyRate, quantities.ContainsKey(row.Accessory.Id) ? quantities[row.Accessory.Id] : 0)).ToList();
             if (_editingId != 0)
             {
-                var detail = await _operations.DetailsAsync(_editingId);
-                var ownItems = await _operations.ItemsAsync(_editingId);
+                var detailResult = await _operations.DetailsAsync(_editingId);
+                var itemsResult = await _operations.ItemsAsync(_editingId);
                 if (version != _availabilityVersion) return;
+                if (!detailResult.Succeeded || !itemsResult.Succeeded) { _status.Text = detailResult.Error ?? itemsResult.Error; return; }
+                var detail = detailResult.Value;
+                var ownItems = itemsResult.Value;
                 bool overlaps = detail.Rows.Count > 0 && Convert.ToDateTime(detail.Rows[0]["Inicio"]) < _end.Value && Convert.ToDateTime(detail.Rows[0]["Fim"]) > _start.Value;
                 foreach (DataGridViewRow gridRow in _accessories.Rows)
                     {
@@ -242,9 +251,12 @@ public sealed class ReservationForm : Form
         if (space == null || _end.Value <= _start.Value) return;
         try
         {
-            var charges = ReadAccessoryRows().Where(row => row.Quantity > 0).Select(row => new AccessoryCharge(row.Quantity, row.Rate));
-            var quote = PricingCalculator.Calculate((decimal)(_end.Value - _start.Value).TotalMinutes / 60m, (int)_people.Value, space.HourlyRate, space.PerPersonHourlyRate, charges);
-            _quote.Text = $"Estimativa: {quote.Total.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}  (espaço, pessoas e acessórios)";
+            var rows = ReadAccessoryRows();
+            if (rows == null) return;
+            var charges = rows.Where(row => row.Quantity > 0).Select(row => new AccessoryCharge(row.Quantity, row.Rate));
+            var pricing = PricingCalculator.Calculate((decimal)(_end.Value - _start.Value).TotalMinutes / 60m, (int)_people.Value, space.HourlyRate, space.PerPersonHourlyRate, charges);
+            if (!pricing.Succeeded) { _quote.Text = pricing.Error; return; }
+            _quote.Text = $"Estimativa: {pricing.Value.Total.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))}  (espaço, pessoas e acessórios)";
         }
         catch { _quote.Text = "Confira as quantidades para visualizar o valor estimado."; }
     }
@@ -258,10 +270,13 @@ public sealed class ReservationForm : Form
         try
         {
             var rows = ReadAccessoryRows();
+            if (rows == null) return;
             if (rows.Any(row => row.Quantity < 0 || row.Quantity > row.Available))
             { _status.Text = "As quantidades precisam estar entre zero e o estoque disponível."; return; }
             var draft = new NewReservation(client.Id, space.Id, _user.Id, _start.Value, _end.Value, (int)_people.Value, string.IsNullOrWhiteSpace(_notes.Text) ? null : _notes.Text, rows.Where(row => row.Quantity > 0).Select(row => new ReservationAccessory(row.AccessoryId, row.Name, row.Quantity, row.Rate)).ToArray());
-            var id = _editingId == 0 ? await _reservations.CreateAsync(draft) : await _reservations.UpdateAsync(_editingId,draft);
+            var result = _editingId == 0 ? await _reservations.CreateAsync(draft) : await _reservations.UpdateAsync(_editingId,draft);
+            if (!result.Succeeded) { _status.Text = result.Error; return; }
+            var id = result.Value;
             _editingId = 0; _editorTitle.Text = "Nova reserva";
             _accessories.DataSource = null;
             await RefreshReservationsAsync();
@@ -273,15 +288,21 @@ public sealed class ReservationForm : Form
 
     private List<AccessoryRow> ReadAccessoryRows()
     {
-        _accessories.EndEdit();
-        return _accessories.Rows.Cast<DataGridViewRow>().Where(row => !row.IsNewRow)
-            .Select(row =>
+        if (!_accessories.EndEdit()) return null;
+        var rows = new List<AccessoryRow>();
+        foreach (DataGridViewRow row in _accessories.Rows)
+        {
+            if (row.IsNewRow) continue;
+            int quantity;
+            if (!int.TryParse(Convert.ToString(row.Cells[4].Value), out quantity))
             {
-                int quantity;
-                if (!int.TryParse(Convert.ToString(row.Cells[4].Value), out quantity)) throw new ArgumentException("Informe uma quantidade inteira de acessórios.");
-                return new AccessoryRow(Convert.ToInt32(row.Cells[0].Value), Convert.ToString(row.Cells[1].Value) ?? "Acessório",
-                    Convert.ToInt32(row.Cells[2].Value), Convert.ToDecimal(row.Cells[3].Value), quantity);
-            }).ToList();
+                _status.Text = "Informe uma quantidade inteira de acessórios.";
+                return null;
+            }
+            rows.Add(new AccessoryRow(Convert.ToInt32(row.Cells[0].Value), Convert.ToString(row.Cells[1].Value) ?? "Acessório",
+                Convert.ToInt32(row.Cells[2].Value), Convert.ToDecimal(row.Cells[3].Value), quantity));
+        }
+        return rows;
     }
 
     private static void ConfigureGrid(DataGridView grid)

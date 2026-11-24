@@ -119,6 +119,8 @@ public sealed class InitialAdministratorForm : Form
         };
     }
 
+    private static string EnteredText(TextBox input) => input.Text == (string)input.Tag ? string.Empty : input.Text;
+
     private async void CreateAdministratorAsync(object sender, EventArgs e)
     {
         if (_password.Text != _confirmPassword.Text)
@@ -129,7 +131,9 @@ public sealed class InitialAdministratorForm : Form
 
         try
         {
-            await _authentication.CreateInitialAdministratorAsync(_name.Text, _login.Text, _password.Text);
+            var result = await _authentication.CreateInitialAdministratorAsync(
+                EnteredText(_name), EnteredText(_login), EnteredText(_password));
+            if (!result.Succeeded) { _message.Text = result.Error; return; }
             DialogResult = DialogResult.OK;
             Close();
         }

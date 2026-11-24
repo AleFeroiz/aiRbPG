@@ -13,34 +13,34 @@ public sealed class AuthenticationService
     public async Task<bool> NeedsInitialAdministratorAsync(CancellationToken cancellationToken = default(CancellationToken)) =>
         !await users.HasAnyUsersAsync(cancellationToken);
 
-    public async Task CreateInitialAdministratorAsync(
+    public async Task<OperationResult<bool>> CreateInitialAdministratorAsync(
         string fullName,
         string login,
         string password,
         CancellationToken cancellationToken = default(CancellationToken))
     {
-        fullName = fullName.Trim();
-        login = login.Trim();
+        fullName = (fullName ?? string.Empty).Trim();
+        login = (login ?? string.Empty).Trim();
 
         if (fullName.Length == 0 || login.Length == 0 || fullName.Length > 120 || login.Length > 60)
         {
-            throw new ArgumentException("Informe nome (até 120 caracteres) e usuário (até 60 caracteres).");
+            return OperationResult<bool>.Failure("Informe nome (até 120 caracteres) e usuário (até 60 caracteres).");
         }
 
-        if (password.Length < MinimumPasswordLength)
+        if (password == null || password.Length < MinimumPasswordLength)
         {
-            throw new ArgumentException($"A senha deve ter pelo menos {MinimumPasswordLength} caracteres.");
+            return OperationResult<bool>.Failure($"A senha deve ter pelo menos {MinimumPasswordLength} caracteres.");
         }
 
         if (await users.HasAnyUsersAsync(cancellationToken))
         {
-            throw new InvalidOperationException("O Administrador inicial já foi criado.");
+            return OperationResult<bool>.Failure("O Administrador inicial já foi criado.");
         }
 
         byte[] salt;
         byte[] hash;
         PasswordHashing.Create(password, out salt, out hash);
-        await users.CreateFirstAdministratorAsync(
+        return await users.CreateFirstAdministratorAsync(
             fullName,
             login,
             salt,

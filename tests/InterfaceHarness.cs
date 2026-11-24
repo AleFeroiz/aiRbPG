@@ -10,6 +10,9 @@ using aiRbPG.Domain.Users;
 using aiRbPG.Domain.Reservations;
 class InterfaceHarness
 {
+    static void Check<T>(aiRbPG.Domain.OperationResult<T> result)
+    { if (!result.Succeeded) throw new Exception(result.Error); }
+
     [STAThread]
     static void Main()
     {
@@ -18,7 +21,7 @@ class InterfaceHarness
         using (var connection = factory.Create()) { connection.Open(); if (!connection.Database.StartsWith("aiRbPG_UI_",StringComparison.Ordinal)) throw new Exception("Banco de QA obrigatório."); }
         var users = new SqlUserRepository(factory); var auth = new AuthenticationService(users);
         if (auth.NeedsInitialAdministratorAsync().GetAwaiter().GetResult())
-            auth.CreateInitialAdministratorAsync("Operador de Demonstração","qa",Guid.NewGuid().ToString("N")).GetAwaiter().GetResult();
+            Check(auth.CreateInitialAdministratorAsync("Operador de Demonstração","qa",Guid.NewGuid().ToString("N")).GetAwaiter().GetResult());
         var user = users.FindByLoginAsync("qa").GetAwaiter().GetResult();
         var catalog = new SqlCatalogRepository(factory,user); var reservations = new SqlReservationRepository(factory);
         if (reservations.GetReservationsAsync().GetAwaiter().GetResult().Count == 0)
@@ -27,7 +30,7 @@ class InterfaceHarness
             var space = catalog.GetSpacesAsync().GetAwaiter().GetResult().First();
             var accessory = catalog.GetAccessoriesAsync().GetAwaiter().GetResult().First();
             var start = new DateTime(2026,12,1,14,0,0);
-            reservations.CreateAsync(new NewReservation(client.Id,space.Id,user.Id,start,start.AddHours(2),4,"Reserva de demonstração",new[] { new ReservationAccessory(accessory.Id,accessory.Name,2,accessory.HourlyRate) })).GetAwaiter().GetResult();
+            Check(reservations.CreateAsync(new NewReservation(client.Id,space.Id,user.Id,start,start.AddHours(2),4,"Reserva de demonstração",new[] { new ReservationAccessory(accessory.Id,accessory.Name,2,accessory.HourlyRate) })).GetAwaiter().GetResult());
         }
         Application.Run(new aiRbPG.WinForms.Forms.DashboardForm(user,catalog,reservations));
     }

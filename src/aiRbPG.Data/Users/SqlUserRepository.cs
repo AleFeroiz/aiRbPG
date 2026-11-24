@@ -1,4 +1,5 @@
 using aiRbPG.Domain.Users;
+using aiRbPG.Domain;
 using System;
 using System.Data;
 using System.Data.SqlClient;
@@ -40,7 +41,7 @@ namespace aiRbPG.Data.Users
             }
         }
 
-        public async Task CreateFirstAdministratorAsync(string fullName, string login, byte[] passwordSalt, byte[] passwordHash, int hashIterations, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<OperationResult<bool>> CreateFirstAdministratorAsync(string fullName, string login, byte[] passwordSalt, byte[] passwordHash, int hashIterations, CancellationToken cancellationToken = default(CancellationToken))
         {
             const string sql = "INSERT dbo.Usuarios (Nome, Login, Perfil, SenhaSalt, SenhaHash, IteracoesHash) VALUES (@Nome, @Login, N'Administrador', @SenhaSalt, @SenhaHash, @Iteracoes);";
             using (var connection = connections.Create())
@@ -53,7 +54,7 @@ namespace aiRbPG.Data.Users
                         using (var countCommand = new SqlCommand("SELECT COUNT_BIG(*) FROM dbo.Usuarios WITH (UPDLOCK, HOLDLOCK);", connection, transaction))
                         {
                             var existingUsers = (long)(await countCommand.ExecuteScalarAsync(cancellationToken) ?? 0L);
-                            if (existingUsers != 0) throw new InvalidOperationException("O Administrador inicial já foi criado.");
+                            if (existingUsers != 0) return OperationResult<bool>.Failure("O Administrador inicial já foi criado.");
                         }
 
                         using (var command = new SqlCommand(sql, connection, transaction))
@@ -66,6 +67,7 @@ namespace aiRbPG.Data.Users
                             await command.ExecuteNonQueryAsync(cancellationToken);
                         }
                         transaction.Commit();
+                        return true;
                     }
                     catch
                     {

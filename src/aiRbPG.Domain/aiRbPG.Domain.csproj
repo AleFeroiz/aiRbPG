@@ -19,6 +19,7 @@
   </PropertyGroup>
   <ItemGroup><Reference Include="System" /><Reference Include="System.Core" /></ItemGroup>
   <ItemGroup>
+    <Compile Include="OperationResult.cs" />
     <Compile Include="Catalog\*.cs" /><Compile Include="Pricing\*.cs" /><Compile Include="Reservations\*.cs" /><Compile Include="Users\*.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

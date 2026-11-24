@@ -1,4 +1,5 @@
-﻿using aiRbPG.Domain.Catalog;
+using aiRbPG.Domain;
+using aiRbPG.Domain.Catalog;
 using aiRbPG.Domain.Pricing;
 using aiRbPG.Domain.Reservations;
 using System;
@@ -26,7 +27,7 @@ namespace aiRbPG.Data.Reservations
                 using (var command = new SqlCommand(sql, connection))
                 using (var reader = await command.ExecuteReaderAsync(cancellationToken))
                     while (await reader.ReadAsync(cancellationToken))
-                        rows.Add(new Reservation(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetDateTime(3), reader.GetDateTime(4), reader.GetInt32(5), reader.GetString(6), reader.GetDecimal(7)));
+                        rows.Add(new Reservation(reader.GetInt32(0), reader.GetString(1), reader.GetString(2), reader.GetDateTime(3), reader.GetDateTime(4), reader.GetInt32(5), reader.GetString(6), reader.GetDecimal(7), reader.GetInt32(8)));
             }
             return rows;
         }
@@ -53,24 +54,26 @@ namespace aiRbPG.Data.Reservations
             return rows;
         }
 
-        public Task<int> CreateAsync(NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<int>> CreateAsync(NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken))
         { return SaveAsync(0, reservation, cancellationToken); }
 
-        public Task<int> UpdateAsync(int id, NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<int>> UpdateAsync(int id, NewReservation reservation, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (id <= 0) throw new ArgumentException("Selecione uma reserva.");
+            if (id <= 0) return Task.FromResult(OperationResult<int>.Failure("Selecione uma reserva."));
             return SaveAsync(id, reservation, cancellationToken);
         }
 
-        private async Task<int> SaveAsync(int id, NewReservation reservation, CancellationToken cancellationToken)
+        private async Task<OperationResult<int>> SaveAsync(int id, NewReservation reservation, CancellationToken cancellationToken)
         {
-            if (reservation == null) throw new ArgumentNullException("reservation");
+            if (reservation == null) return OperationResult<int>.Failure("Informe os dados da reserva.");
             if (reservation.Accessories == null || reservation.Accessories.Any(x => x == null || x.Quantity < 0) || reservation.Accessories.GroupBy(x => x.AccessoryId).Any(g => g.Count() > 1))
-                throw new ArgumentException("Informe acessórios sem duplicação e quantidades não negativas.");
-            if (reservation.Notes != null && reservation.Notes.Length > 500) throw new ArgumentException("Observação limitada a 500 caracteres.");
-            if (reservation.End <= reservation.Start) throw new ArgumentException("O horário de término deve ser posterior ao início.");
-            if (reservation.People <= 0) throw new ArgumentException("A reserva deve ter pelo menos uma pessoa.");
+                return OperationResult<int>.Failure("Informe acessórios sem duplicação e quantidades não negativas.");
+            if (reservation.Notes != null && reservation.Notes.Length > 500) return OperationResult<int>.Failure("Observação limitada a 500 caracteres.");
+            if (reservation.End <= reservation.Start) return OperationResult<int>.Failure("O horário de término deve ser posterior ao início.");
+            if (reservation.People <= 0) return OperationResult<int>.Failure("A reserva deve ter pelo menos uma pessoa.");
             var hours = (decimal)(reservation.End - reservation.Start).TotalMinutes / 60m;
+            if (Math.Round(hours, 2, MidpointRounding.AwayFromZero) == 0 || hours > 999999.99m)
+                return OperationResult<int>.Failure("A duração está fora do intervalo aceito para reservas.");
 
             using (var connection = connections.Create())
             {
@@ -82,17 +85,17 @@ namespace aiRbPG.Data.Reservations
                         using (var valid = new SqlCommand("SELECT COUNT(*) FROM dbo.Clientes WHERE ClienteId=@Cliente AND Ativo=1;", connection, transaction))
                         {
                             valid.Parameters.AddWithValue("@Cliente", reservation.ClientId);
-                            if (Convert.ToInt32(await valid.ExecuteScalarAsync(cancellationToken)) != 1) throw new InvalidOperationException("Cliente inativo ou inexistente.");
+                            if (Convert.ToInt32(await valid.ExecuteScalarAsync(cancellationToken)) != 1) return OperationResult<int>.Failure("Cliente inativo ou inexistente.");
                             valid.CommandText = "SELECT COUNT(*) FROM dbo.Usuarios WHERE UsuarioId=@Usuario AND Ativo=1;";
                             valid.Parameters.AddWithValue("@Usuario", reservation.CreatedByUserId);
-                            if (Convert.ToInt32(await valid.ExecuteScalarAsync(cancellationToken)) != 1) throw new UnauthorizedAccessException("Usuário inativo ou inexistente.");
+                            if (Convert.ToInt32(await valid.ExecuteScalarAsync(cancellationToken)) != 1) return OperationResult<int>.Failure("Usuário inativo ou inexistente.");
                         }
                         if (id != 0)
                         {
                             using (var editable = new SqlCommand("SELECT COUNT(*) FROM dbo.Reservas WITH (UPDLOCK,HOLDLOCK) WHERE ReservaId=@Id AND Status IN (N'Pendente',N'Confirmada') AND NOT EXISTS(SELECT 1 FROM dbo.Pagamentos p WHERE p.ReservaId=@Id);", connection, transaction))
                             {
                                 editable.Parameters.AddWithValue("@Id", id);
-                                if (Convert.ToInt32(await editable.ExecuteScalarAsync(cancellationToken)) != 1) throw new InvalidOperationException("Só é possível alterar reserva pendente/confirmada sem pagamentos.");
+                                if (Convert.ToInt32(await editable.ExecuteScalarAsync(cancellationToken)) != 1) return OperationResult<int>.Failure("Só é possível alterar reserva pendente/confirmada sem pagamentos.");
                             }
                         }
                         int capacity;
@@ -103,11 +106,12 @@ namespace aiRbPG.Data.Reservations
                             command.Parameters.Add("@EspacoId", SqlDbType.Int).Value = reservation.SpaceId;
                             using (var reader = await command.ExecuteReaderAsync(cancellationToken))
                             {
-                                if (!await reader.ReadAsync(cancellationToken)) throw new InvalidOperationException("O espaço selecionado não está ativo.");
+                                if (!await reader.ReadAsync(cancellationToken)) return OperationResult<int>.Failure("O espaço selecionado não está ativo.");
                                 capacity = reader.GetInt32(0); spaceRate = reader.GetDecimal(1); personRate = reader.GetDecimal(2);
                             }
                         }
-                        ReservationRules.Validate(reservation.Start, reservation.End, reservation.People, capacity);
+                        var validation = ReservationRules.Validate(reservation.Start, reservation.End, reservation.People, capacity);
+                        if (validation != null) return OperationResult<int>.Failure(validation);
 
                         using (var conflict = new SqlCommand("SELECT COUNT_BIG(*) FROM dbo.Reservas WITH (UPDLOCK,HOLDLOCK) WHERE ReservaId<>@Id AND EspacoId=@EspacoId AND Status NOT IN (N'Cancelada',N'Finalizada') AND Inicio<@Fim AND (Fim>@Inicio OR Status IN(N'EmAndamento',N'AguardandoDevolucao'));", connection, transaction))
                         {
@@ -116,7 +120,7 @@ namespace aiRbPG.Data.Reservations
                             conflict.Parameters.Add("@Inicio", SqlDbType.DateTime2).Value = reservation.Start;
                             conflict.Parameters.Add("@Fim", SqlDbType.DateTime2).Value = reservation.End;
                             if (Convert.ToInt64(await conflict.ExecuteScalarAsync(cancellationToken)) > 0)
-                                throw new InvalidOperationException("Já existe uma reserva nesse espaço para o período escolhido.");
+                                return OperationResult<int>.Failure("Já existe uma reserva nesse espaço para o período escolhido.");
                         }
 
                         var accessoryPrices = new Dictionary<int, decimal>();
@@ -130,17 +134,21 @@ namespace aiRbPG.Data.Reservations
                                 availability.Parameters.Add("@Fim", SqlDbType.DateTime2).Value = reservation.End;
                                 using (var reader = await availability.ExecuteReaderAsync(cancellationToken))
                                 {
-                                    if (!await reader.ReadAsync(cancellationToken)) throw new InvalidOperationException("Um acessório selecionado não está ativo.");
+                                    if (!await reader.ReadAsync(cancellationToken)) return OperationResult<int>.Failure("Um acessório selecionado não está ativo.");
                                     var rate = reader.GetDecimal(0);
                                     var available = reader.GetInt32(1);
-                                    if (item.Quantity > available) throw new InvalidOperationException("Estoque insuficiente para " + item.Name + ". Disponível: " + available + ".");
+                                    if (item.Quantity > available) return OperationResult<int>.Failure("Estoque insuficiente para " + item.Name + ". Disponível: " + available + ".");
                                     accessoryPrices[item.AccessoryId] = rate;
                                 }
                             }
                         }
 
                         var charges = reservation.Accessories.Where(x => x.Quantity > 0).Select(x => new AccessoryCharge(x.Quantity, accessoryPrices[x.AccessoryId])).ToArray();
-                        var quote = PricingCalculator.Calculate(hours, reservation.People, spaceRate, personRate, charges);
+                        var pricing = PricingCalculator.Calculate(hours, reservation.People, spaceRate, personRate, charges);
+                        if (!pricing.Succeeded) return OperationResult<int>.Failure(pricing.Error);
+                        var quote = pricing.Value;
+                        if (quote.Total > 99999999.99m)
+                            return OperationResult<int>.Failure("O valor total da reserva excede R$ 99.999.999,99.");
                         int reservationId;
                         const string insertSql = "INSERT dbo.Reservas (ClienteId,EspacoId,CriadaPorUsuarioId,Inicio,Fim,QuantidadePessoas,Status,Horas,TarifaEspacoHoraAplicada,TarifaPessoaHoraAplicada,SubtotalEspaco,SubtotalPessoas,Desconto,Multas,ValorTotal,Observacao) OUTPUT INSERTED.ReservaId VALUES (@ClienteId,@EspacoId,@UsuarioId,@Inicio,@Fim,@Pessoas,N'Pendente',@Horas,@TarifaEspaco,@TarifaPessoa,@SubtotalEspaco,@SubtotalPessoas,0,0,@Total,@Observacao);";
                         const string updateSql = "UPDATE dbo.Reservas SET ClienteId=@ClienteId,EspacoId=@EspacoId,Inicio=@Inicio,Fim=@Fim,QuantidadePessoas=@Pessoas,Horas=@Horas,TarifaEspacoHoraAplicada=@TarifaEspaco,TarifaPessoaHoraAplicada=@TarifaPessoa,SubtotalEspaco=@SubtotalEspaco,SubtotalPessoas=@SubtotalPessoas,Desconto=0,Multas=0,ValorTotal=@Total,Observacao=@Observacao OUTPUT INSERTED.ReservaId WHERE ReservaId=@Id; DELETE dbo.ItensReserva WHERE ReservaId=@Id;";

@@ -1,3 +1,4 @@
+using aiRbPG.Domain;
 using aiRbPG.Domain.Catalog;
 using System;
 using System.Collections.Generic;
@@ -15,10 +16,10 @@ namespace aiRbPG.Data.Catalog
         public SqlCatalogRepository(SqlConnectionFactory connections, aiRbPG.Domain.Users.UserAccount user)
         { this.connections = connections; if (user == null) throw new ArgumentNullException("user"); userId = user.Id; }
 
-        private static void Name(string value, int max)
-        { if (string.IsNullOrWhiteSpace(value) || value.Trim().Length > max) throw new ArgumentException("Nome obrigatório, limitado a " + max + " caracteres."); }
-        private static void Length(string value, int max)
-        { if (value != null && value.Length > max) throw new ArgumentException("Campo excede o limite de " + max + " caracteres."); }
+        private static string Name(string value, int max)
+        { return (string.IsNullOrWhiteSpace(value) || value.Trim().Length > max) ? "Nome obrigatório, limitado a " + max + " caracteres." : null; }
+        private static string Length(string value, int max)
+        { return (value != null && value.Length > max) ? "Campo excede o limite de " + max + " caracteres." : null; }
 
         public async Task<IReadOnlyList<Client>> GetClientsAsync(CancellationToken cancellationToken = default(CancellationToken))
         {
@@ -35,9 +36,10 @@ namespace aiRbPG.Data.Catalog
             return clients;
         }
 
-        public Task SaveClientAsync(Client client, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> SaveClientAsync(Client client, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Name(client.Name,120); Length(client.Phone,30); Length(client.Email,254);
+            var error = Name(client.Name,120) ?? Length(client.Phone,30) ?? Length(client.Email,254);
+            if (error != null) return Task.FromResult(OperationResult<bool>.Failure(error));
             return SaveAsync(client.Id,
                 "INSERT dbo.Clientes (Nome, Telefone, Email) VALUES (@Nome, @Telefone, @Email);",
                 "UPDATE dbo.Clientes SET Nome = @Nome, Telefone = @Telefone, Email = @Email WHERE ClienteId = @Id AND Ativo = 1;",
@@ -49,7 +51,7 @@ namespace aiRbPG.Data.Catalog
                 }, cancellationToken);
         }
 
-        public Task DeactivateClientAsync(int clientId, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> DeactivateClientAsync(int clientId, CancellationToken cancellationToken = default(CancellationToken))
         { return DeactivateAsync("UPDATE dbo.Clientes SET Ativo = 0 WHERE ClienteId = @Id;", clientId, cancellationToken); }
 
         public async Task<IReadOnlyList<RpgSpace>> GetSpacesAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -67,10 +69,12 @@ namespace aiRbPG.Data.Catalog
             return spaces;
         }
 
-        public Task SaveSpaceAsync(RpgSpace space, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> SaveSpaceAsync(RpgSpace space, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Name(space.Name,100); Length(space.Description,500); Length(space.Address,250);
-            if (space.Capacity <= 0 || space.HourlyRate < 0 || space.PerPersonHourlyRate < 0) throw new ArgumentException("Capacidade e tarifas inválidas.");
+            var error = Name(space.Name,100) ?? Length(space.Description,500) ?? Length(space.Address,250);
+            if (error != null) return Task.FromResult(OperationResult<bool>.Failure(error));
+            if (space.Capacity <= 0 || !ValidRate(space.HourlyRate) || !ValidRate(space.PerPersonHourlyRate))
+                return Task.FromResult(OperationResult<bool>.Failure("Informe capacidade positiva e tarifas entre zero e R$ 99.999.999,99."));
             return SaveAsync(space.Id,
                 "INSERT dbo.Espacos (Nome, Descricao, Endereco, Capacidade, TarifaHora, TarifaPessoaHora) VALUES (@Nome, @Descricao, @Endereco, @Capacidade, @TarifaHora, @TarifaPessoaHora);",
                 "UPDATE dbo.Espacos SET Nome=@Nome, Descricao=@Descricao, Endereco=@Endereco, Capacidade=@Capacidade, TarifaHora=@TarifaHora, TarifaPessoaHora=@TarifaPessoaHora WHERE EspacoId=@Id AND Ativo=1;",
@@ -85,7 +89,7 @@ namespace aiRbPG.Data.Catalog
                 }, cancellationToken);
         }
 
-        public Task DeactivateSpaceAsync(int spaceId, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> DeactivateSpaceAsync(int spaceId, CancellationToken cancellationToken = default(CancellationToken))
         { return DeactivateAsync("UPDATE dbo.Espacos SET Ativo = 0 WHERE EspacoId = @Id;", spaceId, cancellationToken); }
 
         public async Task<IReadOnlyList<RpgSystem>> GetRpgSystemsAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -103,9 +107,10 @@ namespace aiRbPG.Data.Catalog
             return systems;
         }
 
-        public Task SaveRpgSystemAsync(RpgSystem system, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> SaveRpgSystemAsync(RpgSystem system, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Name(system.Name,100); Length(system.Description,500);
+            var error = Name(system.Name,100) ?? Length(system.Description,500);
+            if (error != null) return Task.FromResult(OperationResult<bool>.Failure(error));
             return SaveAsync(system.Id,
                 "INSERT dbo.SistemasRpg (Nome, Descricao) VALUES (@Nome, @Descricao);",
                 "UPDATE dbo.SistemasRpg SET Nome=@Nome, Descricao=@Descricao WHERE SistemaRpgId=@Id AND Ativo=1;",
@@ -113,10 +118,11 @@ namespace aiRbPG.Data.Catalog
                 {
                     command.Parameters.Add("@Nome", SqlDbType.NVarChar, 100).Value = system.Name.Trim();
                     command.Parameters.Add("@Descricao", SqlDbType.NVarChar, 500).Value = (object)OptionalTrim(system.Description) ?? DBNull.Value;
-                }, cancellationToken);
+                }, cancellationToken,
+                "IF EXISTS(SELECT 1 FROM dbo.SistemasRpg WITH(UPDLOCK,HOLDLOCK) WHERE Nome=@Nome AND SistemaRpgId<>@Id) BEGIN SELECT N'Já existe um sistema de RPG com este nome.'; RETURN; END; ");
         }
 
-        public Task DeactivateRpgSystemAsync(int systemId, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> DeactivateRpgSystemAsync(int systemId, CancellationToken cancellationToken = default(CancellationToken))
         { return DeactivateAsync("UPDATE dbo.SistemasRpg SET Ativo = 0 WHERE SistemaRpgId = @Id;", systemId, cancellationToken); }
 
         public async Task<IReadOnlyList<Accessory>> GetAccessoriesAsync(CancellationToken cancellationToken = default(CancellationToken))
@@ -134,13 +140,15 @@ namespace aiRbPG.Data.Catalog
             return accessories;
         }
 
-        public Task SaveAccessoryAsync(Accessory accessory, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> SaveAccessoryAsync(Accessory accessory, CancellationToken cancellationToken = default(CancellationToken))
         {
-            Name(accessory.Name,120); Length(accessory.Description,500);
-            if (accessory.QuantityInStock < 0 || accessory.HourlyRate < 0) throw new ArgumentException("Estoque e tarifa não podem ser negativos.");
+            var error = Name(accessory.Name,120) ?? Length(accessory.Description,500);
+            if (error != null) return Task.FromResult(OperationResult<bool>.Failure(error));
+            if (accessory.QuantityInStock < 0 || !ValidRate(accessory.HourlyRate))
+                return Task.FromResult(OperationResult<bool>.Failure("Informe estoque não negativo e tarifa entre zero e R$ 99.999.999,99."));
             return SaveAsync(accessory.Id,
                 "INSERT dbo.Acessorios (Nome, Descricao, QuantidadeEstoque, TarifaHora) VALUES (@Nome, @Descricao, @QuantidadeEstoque, @TarifaHora);",
-                "IF @QuantidadeEstoque < (SELECT COALESCE(SUM(i.QuantidadeReservada-i.QuantidadeDevolvida-i.QuantidadeDanificada-i.QuantidadePerdida),0) FROM dbo.ItensReserva i JOIN dbo.Reservas r ON r.ReservaId=i.ReservaId WHERE i.AcessorioId=@Id AND r.Status NOT IN(N'Cancelada',N'Finalizada')) THROW 50002,N'Estoque inferior às quantidades comprometidas em reservas abertas.',1; UPDATE dbo.Acessorios SET Nome=@Nome, Descricao=@Descricao, QuantidadeEstoque=@QuantidadeEstoque, TarifaHora=@TarifaHora WHERE AcessorioId=@Id AND Ativo=1;",
+                "IF @QuantidadeEstoque < (SELECT COALESCE(SUM(i.QuantidadeReservada-i.QuantidadeDevolvida-i.QuantidadeDanificada-i.QuantidadePerdida),0) FROM dbo.ItensReserva i JOIN dbo.Reservas r ON r.ReservaId=i.ReservaId WHERE i.AcessorioId=@Id AND r.Status NOT IN(N'Cancelada',N'Finalizada')) BEGIN SELECT N'Estoque inferior às quantidades comprometidas em reservas abertas.'; RETURN; END; UPDATE dbo.Acessorios SET Nome=@Nome, Descricao=@Descricao, QuantidadeEstoque=@QuantidadeEstoque, TarifaHora=@TarifaHora WHERE AcessorioId=@Id AND Ativo=1;",
                 delegate(SqlCommand command)
                 {
                     command.Parameters.Add("@Nome", SqlDbType.NVarChar, 120).Value = accessory.Name.Trim();
@@ -150,47 +158,42 @@ namespace aiRbPG.Data.Catalog
                 }, cancellationToken);
         }
 
-        public Task DeactivateAccessoryAsync(int accessoryId, CancellationToken cancellationToken = default(CancellationToken))
+        public Task<OperationResult<bool>> DeactivateAccessoryAsync(int accessoryId, CancellationToken cancellationToken = default(CancellationToken))
         { return DeactivateAsync("UPDATE dbo.Acessorios SET Ativo = 0 WHERE AcessorioId = @Id;", accessoryId, cancellationToken); }
 
-        private async Task SaveAsync(int id, string insertSql, string updateSql, Action<SqlCommand> addParameters, CancellationToken cancellationToken)
+        private async Task<OperationResult<bool>> SaveAsync(int id, string insertSql, string updateSql, Action<SqlCommand> addParameters, CancellationToken cancellationToken, string validationSql = "")
         {
             using (var connection = connections.Create())
             {
                 await connection.OpenAsync(cancellationToken);
                 using (var transaction = connection.BeginTransaction(IsolationLevel.Serializable))
-                using (var command = new SqlCommand(Permission(insertSql) + (id == 0 ? insertSql : updateSql), connection, transaction))
+                using (var command = new SqlCommand(Permission(insertSql) + validationSql + (id == 0 ? insertSql : updateSql) + " SELECT CASE WHEN @@ROWCOUNT=1 THEN NULL ELSE N'Registro inativo ou inexistente.' END;", connection, transaction))
                 {
                     command.Parameters.AddWithValue("@User",userId);
                     addParameters(command);
-                    if (id != 0) command.Parameters.Add("@Id", SqlDbType.Int).Value = id;
-                    if (await command.ExecuteNonQueryAsync(cancellationToken) != 1) throw new InvalidOperationException("Registro inativo ou inexistente.");
-                    transaction.Commit();
-                }
-            }
-        }
-
-        private async Task DeactivateAsync(string sql, int id, CancellationToken cancellationToken)
-        {
-            using (var connection = connections.Create())
-            {
-                await connection.OpenAsync(cancellationToken);
-                using (var command = new SqlCommand(Permission(sql) + sql, connection))
-                {
-                    command.Parameters.AddWithValue("@User",userId);
                     command.Parameters.Add("@Id", SqlDbType.Int).Value = id;
-                    await command.ExecuteNonQueryAsync(cancellationToken);
+                    var error = await command.ExecuteScalarAsync(cancellationToken) as string;
+                    if (error != null) return OperationResult<bool>.Failure(error);
+                    transaction.Commit();
+                    return true;
                 }
             }
         }
 
-        private static string Permission(string sql)
+        private Task<OperationResult<bool>> DeactivateAsync(string sql, int id, CancellationToken cancellationToken)
+        {
+            if (id <= 0) return Task.FromResult(OperationResult<bool>.Failure("Selecione um registro."));
+            return SaveAsync(id, sql, sql, command => { }, cancellationToken);
+        }
+
+                private static string Permission(string sql)
         {
             var role = sql.Contains("dbo.Clientes") ? "IN(N'Administrador',N'Atendente')" : "=N'Administrador'";
-            return "IF NOT EXISTS(SELECT 1 FROM dbo.Usuarios WHERE UsuarioId=@User AND Ativo=1 AND Perfil " + role + ") THROW 50001,N'Usuário sem permissão para este cadastro.',1; ";
+            return "IF NOT EXISTS(SELECT 1 FROM dbo.Usuarios WHERE UsuarioId=@User AND Ativo=1 AND Perfil " + role + ") BEGIN SELECT N'Usuário sem permissão para este cadastro.'; RETURN; END; ";
         }
 
         private static string OptionalTrim(string value) { return string.IsNullOrWhiteSpace(value) ? null : value.Trim(); }
+        private static bool ValidRate(decimal value) => value >= 0 && value <= 99999999.99m;
         private static void AddDecimal(SqlCommand command, string name, decimal value)
         {
             var parameter = command.Parameters.Add(name, SqlDbType.Decimal);

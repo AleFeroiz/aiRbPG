@@ -23,10 +23,10 @@ namespace aiRbPG.WinForms.Forms
             userButtons.Controls.Add(Ui.Action("Cadastrar usuário",AddAsync));
             userButtons.Controls.Add(Ui.Action("Ativar / inativar selecionado",async () =>
             {
-                if (users.CurrentRow == null) throw new InvalidOperationException("Selecione um usuário.");
+                if (users.CurrentRow == null) { message.Text = "Selecione um usuário."; return; }
                 int id = Convert.ToInt32(users.CurrentRow.Cells["UsuarioId"].Value);
                 bool active = Convert.ToBoolean(users.CurrentRow.Cells["Ativo"].Value);
-                await operations.SetUserActiveAsync(id,!active); await LoadUsersAsync();
+                if (Ui.ShowResult(await operations.SetUserActiveAsync(id,!active))) await LoadUsersAsync();
             }));
             userTab.Controls.Add(users); userTab.Controls.Add(userButtons);
             var filters = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 100, Padding = new Padding(8), AutoScroll = true };
@@ -34,16 +34,19 @@ namespace aiRbPG.WinForms.Forms
             filters.Controls.Add(new Label { Text = "Até (inclusive)",AutoSize = true }); filters.Controls.Add(end);
             filters.Controls.Add(Ui.Action("Recebimentos",async () =>
             {
-                var table = await operations.RevenueAsync(start.Value.Date,end.Value.Date.AddDays(1)); report.DataSource = table;
+                var result = await operations.RevenueAsync(start.Value.Date,end.Value.Date.AddDays(1));
+                if (!Ui.ShowResult(result)) return;
+                var table = result.Value;
+                report.DataSource = table;
                 decimal sum = 0; foreach (System.Data.DataRow row in table.Rows) sum += Convert.ToDecimal(row["Recebido"]);
                 message.Text = "Total recebido no período: R$ " + sum.ToString("F2") + ". Pagamentos manuais; não é o valor de reservas em aberto.";
             }));
-            filters.Controls.Add(Ui.Action("Acessórios mais reservados",async () => { report.DataSource = await operations.MostRentedAsync(start.Value.Date,end.Value.Date.AddDays(1)); message.Text = "Por início da reserva no período; canceladas excluídas."; }));
+            filters.Controls.Add(Ui.Action("Acessórios mais reservados",async () => { var result = await operations.MostRentedAsync(start.Value.Date,end.Value.Date.AddDays(1)); if (!Ui.ShowResult(result)) return; report.DataSource = result.Value; message.Text = "Por início da reserva no período; canceladas excluídas."; }));
             reportTab.Controls.Add(report); reportTab.Controls.Add(filters); tabs.TabPages.Add(userTab); tabs.TabPages.Add(reportTab);
             Controls.Add(tabs); Controls.Add(message);
             Load += async (s,e) => { try { await LoadUsersAsync(); } catch (Exception ex) { message.Text = ex.Message; } };
         }
-        private async Task LoadUsersAsync() { users.DataSource = await operations.UsersAsync(); }
+        private async Task LoadUsersAsync() { var result = await operations.UsersAsync(); if (Ui.ShowResult(result)) users.DataSource = result.Value; }
         private async Task AddAsync()
         {
             using (var dialog = new FieldsDialog("Cadastrar usuário do aplicativo"))
@@ -51,7 +54,7 @@ namespace aiRbPG.WinForms.Forms
                 dialog.TextField("name","Nome completo"); dialog.TextField("login","Login"); dialog.TextField("password","Senha (mín. 10)",true);
                 dialog.Choice("role","Perfil",new[] { "Atendente","Administrador" });
                 if (dialog.ShowDialog(this) != DialogResult.OK) return;
-                await operations.AddUserAsync(dialog.Value("name"),dialog.Value("login"),dialog.Value("password"),dialog.Value("role") == "Administrador");
+                if (!Ui.ShowResult(await operations.AddUserAsync(dialog.Value("name"),dialog.Value("login"),dialog.Value("password"),dialog.Value("role") == "Administrador"))) return;
                 await LoadUsersAsync(); message.Text = "Usuário cadastrado.";
             }
         }

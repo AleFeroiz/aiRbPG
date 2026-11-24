@@ -85,3 +85,9 @@
 - Espaços aceita deixar a tarifa opcional por pessoa/hora em branco e grava zero. O formulário aceita vírgula decimal da cultura atual e ponto decimal sem interpretar o ponto como separador de milhares.
 - Teste dos controles dos quatro formulários em banco SQL temporário, iniciado com registros demonstrativos. Em cada tela foram verificados a abertura em Novo, a seleção de uma linha, o clique em Novo, a inserção, a edição e a preservação do cadastro anterior. No formulário de Espaços, foram verificados também a tarifa opcional zero e o valor decimal salvo. O banco temporário foi removido.
 - Release compilado com MSBuild 14.0. A sessão Debug anterior mantinha o executável bloqueado. Após confirmar que somente o painel estava aberto, a depuração foi encerrada e o Visual Studio 2015 compilou Debug com zero falhas.
+
+## Mensagens para recusas de regras de negócio em 24/11/2026
+
+- Reservas, retirada, pagamentos, devoluções, cadastros, relatórios e administração passaram a retornar o motivo das recusas previstas. A interface apresenta esse motivo sem lançar exceções de validação. Regras, permissões e transações foram preservadas. Mutações recusadas não efetuam commit.
+- A suíte Release passou em 52 verificações em banco temporário, incluindo a mensagem exata da retirada recusada e a preservação do estado pendente. Um teste separado no formulário WinForms verificou a mensagem, fechou o aviso e confirmou e retirou a mesma reserva sem fechar a tela. Os bancos temporários foram removidos.
+- O Visual Studio 2015 Update 3 recompilou Release/Any CPU com três projetos aprovados e zero falhas. A verificação do formulário foi executada separadamente da sessão de depuração anterior.
