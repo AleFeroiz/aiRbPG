@@ -16,10 +16,12 @@ public sealed class CatalogForm : Form
     private readonly DataGridView _grid = new DataGridView();
     private readonly Dictionary<string, TextBox> _inputs = new Dictionary<string, TextBox>();
     private readonly Label _message = new Label();
+    private readonly Label _mode = new Label { Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft };
+    private Button _saveButton;
+    private Button _deactivateButton;
     private int _selectedId;
     private bool _refreshing;
     private bool _saving;
-    private readonly Label _mode = new Label { Dock = DockStyle.Bottom, Height = 38, Padding = new Padding(22,8,0,0) };
 
     public CatalogForm(ICatalogRepository catalog, CatalogKind kind)
     {
@@ -74,13 +76,14 @@ public sealed class CatalogForm : Form
         _grid.RowHeadersVisible = false;
         _grid.AllowUserToAddRows = false;
         _grid.AllowUserToDeleteRows = false;
-        _grid.SelectionChanged += GridSelectionChanged;
+        _grid.CellClick += (sender, args) => EditRow(args.RowIndex);
+        _grid.KeyUp += GridKeyUp;
 
         var editor = new TableLayoutPanel
         {
             Dock = DockStyle.Fill,
             ColumnCount = 1,
-            RowCount = FieldCount() + 3,
+            RowCount = FieldCount() + 4,
             Padding = new Padding(24, 8, 8, 8)
         };
         editor.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
@@ -97,6 +100,8 @@ public sealed class CatalogForm : Form
         editor.Controls.Add(heading, 0, 0);
 
         var row = 1;
+        editor.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
+        editor.Controls.Add(_mode, 0, row++);
         foreach (var field in Fields())
         {
             var group = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, Margin = new Padding(0, 4, 0, 4) };
@@ -118,9 +123,11 @@ public sealed class CatalogForm : Form
             WrapContents = false,
             Margin = new Padding(0, 10, 0, 0)
         };
-        buttons.Controls.Add(CreateButton("Salvar", SaveAsync, primary: true));
-        buttons.Controls.Add(CreateButton("Novo", (sender, args) => ClearInputs()));
-        buttons.Controls.Add(CreateButton("Inativar", DeactivateAsync));
+        _saveButton = CreateButton("Salvar novo", SaveAsync, primary: true);
+        buttons.Controls.Add(_saveButton);
+        buttons.Controls.Add(CreateButton("Novo", StartNew));
+        _deactivateButton = CreateButton("Inativar", DeactivateAsync);
+        buttons.Controls.Add(_deactivateButton);
         editor.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
         editor.Controls.Add(buttons, 0, row++);
 
@@ -133,8 +140,7 @@ public sealed class CatalogForm : Form
         shell.Controls.Add(_grid, 0, 0);
         shell.Controls.Add(editor, 1, 0);
         Controls.Add(shell);
-        Controls.Add(_mode);
-        _mode.Text = "Novo cadastro: preencha os campos e clique em Salvar.";
+        UpdateMode();
     }
 
     private IEnumerable<CatalogField> Fields()
@@ -161,7 +167,7 @@ public sealed class CatalogForm : Form
         var button = new Button
         {
             Text = text,
-            Width = primary ? 94 : 88,
+            Width = primary ? 112 : 88,
             Height = 38,
             FlatStyle = FlatStyle.Flat,
             BackColor = primary ? Color.FromArgb(183, 132, 55) : Color.FromArgb(225, 222, 215),
@@ -175,7 +181,7 @@ public sealed class CatalogForm : Form
 
     private async void LoadRowsAsync(object sender, EventArgs e) => await RefreshRowsAsync();
 
-    private async Task RefreshRowsAsync()
+    private async Task RefreshRowsAsync(string successMessage = "")
     {
         _refreshing = true;
         try
@@ -188,30 +194,44 @@ public sealed class CatalogForm : Form
                 case CatalogKind.Accessories: _grid.DataSource = await _catalog.GetAccessoriesAsync(); break;
                 default: _grid.DataSource = new object[0]; break;
             }
-            _message.Text = string.Empty;
             ClearInputs();
+            _message.Text = successMessage;
         }
         catch (Exception)
         {
-            _message.Text = "Não foi possível carregar os dados. Confira a conexão e o script do banco.";
+            _message.Text = (successMessage + " Não foi possível atualizar a lista. Confira a conexão com o banco.").TrimStart();
         }
         finally { _refreshing = false; }
     }
 
-    private void GridSelectionChanged(object sender, EventArgs e)
+    private void GridKeyUp(object sender, KeyEventArgs e)
     {
-        if (_refreshing || _grid.CurrentRow == null || !_grid.CurrentRow.Selected || _grid.CurrentRow.DataBoundItem == null)
+        switch (e.KeyCode)
         {
-            return;
+            case Keys.Up:
+            case Keys.Down:
+            case Keys.Home:
+            case Keys.End:
+            case Keys.PageUp:
+            case Keys.PageDown:
+            case Keys.Space:
+                if (_grid.CurrentRow != null) EditRow(_grid.CurrentRow.Index);
+                break;
         }
-        var selected = _grid.CurrentRow.DataBoundItem;
-        _mode.Text = "Editando registro selecionado. Use Novo para cadastrar outro.";
+    }
+
+    private void EditRow(int rowIndex)
+    {
+        if (_refreshing || _saving || rowIndex < 0 || rowIndex >= _grid.Rows.Count) return;
+        var selected = _grid.Rows[rowIndex].DataBoundItem;
+        _message.Text = string.Empty;
 
         var client = selected as Client;
         if (client != null)
         {
                 _selectedId = client.Id;
                 Set("name", client.Name); Set("phone", client.Phone); Set("email", client.Email);
+                UpdateMode();
                 return;
         }
         var space = selected as RpgSpace;
@@ -220,6 +240,7 @@ public sealed class CatalogForm : Form
                 _selectedId = space.Id;
                 Set("name", space.Name); Set("description", space.Description); Set("address", space.Address);
                 Set("capacity", space.Capacity); Set("hourlyRate", space.HourlyRate); Set("personRate", space.PerPersonHourlyRate);
+                UpdateMode();
                 return;
         }
         var system = selected as RpgSystem;
@@ -227,6 +248,7 @@ public sealed class CatalogForm : Form
         {
                 _selectedId = system.Id;
                 Set("name", system.Name); Set("description", system.Description);
+                UpdateMode();
                 return;
         }
         var accessory = selected as Accessory;
@@ -235,6 +257,7 @@ public sealed class CatalogForm : Form
                 _selectedId = accessory.Id;
                 Set("name", accessory.Name); Set("description", accessory.Description);
                 Set("stock", accessory.QuantityInStock); Set("hourlyRate", accessory.HourlyRate);
+                UpdateMode();
         }
     }
 
@@ -249,7 +272,7 @@ public sealed class CatalogForm : Form
 
     private async void SaveAsync(object sender, EventArgs e)
     {
-        if (_saving) return;
+        if (_saving || _refreshing) return;
         var name = Value("name").Trim();
         if (name.Length == 0)
         {
@@ -268,10 +291,12 @@ public sealed class CatalogForm : Form
                 case CatalogKind.Spaces:
                     int capacity;
                     decimal spaceRate;
-                    decimal personRate;
+                    decimal personRate = 0;
+                    var personRateInput = Value("personRate");
                     if (!int.TryParse(Value("capacity"), out capacity) || capacity <= 0 ||
                         !TryDecimal(Value("hourlyRate"), out spaceRate) || spaceRate < 0 ||
-                        !TryDecimal(Value("personRate"), out personRate) || personRate < 0)
+                        (!string.IsNullOrWhiteSpace(personRateInput) &&
+                            (!TryDecimal(personRateInput, out personRate) || personRate < 0)))
                     {
                         _message.Text = "Informe capacidade positiva e tarifas válidas, iguais ou maiores que zero.";
                         return;
@@ -296,10 +321,8 @@ public sealed class CatalogForm : Form
                     break;
             }
 
-            _selectedId = 0;
             ClearInputs();
-            await RefreshRowsAsync();
-            _message.Text = "Cadastro salvo.";
+            await RefreshRowsAsync("Cadastro salvo.");
         }
         catch (Exception ex)
         {
@@ -310,6 +333,7 @@ public sealed class CatalogForm : Form
 
     private async void DeactivateAsync(object sender, EventArgs e)
     {
+        if (_refreshing || _saving) return;
         if (_selectedId == 0)
         {
             _message.Text = "Selecione um registro para inativar.";
@@ -326,6 +350,7 @@ public sealed class CatalogForm : Form
             return;
         }
 
+        _saving = true;
         try
         {
             switch (_kind)
@@ -336,15 +361,14 @@ public sealed class CatalogForm : Form
                 case CatalogKind.Accessories: await _catalog.DeactivateAccessoryAsync(_selectedId); break;
             }
 
-            _selectedId = 0;
             ClearInputs();
-            await RefreshRowsAsync();
-            _message.Text = "Cadastro inativado.";
+            await RefreshRowsAsync("Cadastro inativado.");
         }
         catch (Exception)
         {
             _message.Text = "Não foi possível inativar este registro.";
         }
+        finally { _saving = false; }
     }
 
     private string Value(string key)
@@ -360,13 +384,19 @@ public sealed class CatalogForm : Form
     }
 
     private static bool TryDecimal(string value, out decimal result) =>
-        decimal.TryParse(value, NumberStyles.Number, CultureInfo.CurrentCulture, out result) ||
-        decimal.TryParse(value, NumberStyles.Number, CultureInfo.InvariantCulture, out result);
+        decimal.TryParse(value, NumberStyles.Number & ~NumberStyles.AllowThousands, CultureInfo.CurrentCulture, out result) ||
+        decimal.TryParse(value, NumberStyles.Number & ~NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out result);
+
+    private void StartNew(object sender, EventArgs e)
+    {
+        if (_refreshing || _saving) return;
+        ClearInputs();
+        _message.Text = "Preencha os campos e clique em Salvar novo.";
+        _inputs["name"].Focus();
+    }
 
     private void ClearInputs()
     {
-        bool previous = _refreshing;
-        _refreshing = true;
         _selectedId = 0;
         _grid.CurrentCell = null;
         _grid.ClearSelection();
@@ -374,8 +404,15 @@ public sealed class CatalogForm : Form
         {
             input.Clear();
         }
-        _mode.Text = "Novo cadastro: preencha os campos e clique em Salvar.";
-        _refreshing = previous;
+        UpdateMode();
+    }
+
+    private void UpdateMode()
+    {
+        bool isNew = _selectedId == 0;
+        _mode.Text = isNew ? "Novo cadastro" : "Editando registro #" + _selectedId;
+        _saveButton.Text = isNew ? "Salvar novo" : "Salvar edição";
+        _deactivateButton.Enabled = !isNew;
     }
 }
 
