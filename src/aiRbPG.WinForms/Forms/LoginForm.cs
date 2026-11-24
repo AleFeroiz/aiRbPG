@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using aiRbPG.Domain.Users;
 using System;
 using System.Drawing;
+using System.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace aiRbPG.WinForms.Forms
@@ -147,11 +148,55 @@ public sealed class LoginForm : Form
                 _message.Text = "Administrador criado. Entre com o usuário cadastrado.";
             }
         }
-        catch (Exception)
+        catch (Exception error)
         {
-            _message.Text = "Não foi possível acessar o banco. Confira a conexão e execute o script SQL.";
+            ShowAccessError(error);
         }
     }
+
+    private void ShowAccessError(Exception error)
+    {
+        string detail;
+        var sql = error as SqlException;
+        if (sql != null)
+        {
+            switch (sql.Number)
+            {
+                case 18456:
+                    detail = "O SQL Server recusou a autenticação. Confira o acesso do login SQL ou da conta Windows.";
+                    break;
+                case 4060:
+                    detail = "O banco aiRbPG está indisponível para a conta configurada. Verifique o banco e as permissões.";
+                    break;
+                case 207:
+                case 208:
+                case 2812:
+                    detail = "O esquema do banco está incompleto ou incompatível. Execute INICIAR.cmd para verificar as migrações.";
+                    break;
+                case 229:
+                case 916:
+                    detail = "A conta configurada precisa de permissões no banco aiRbPG.";
+                    break;
+                default:
+                    detail = "Confira se a instância SQL está acessível e se a conta tem acesso ao banco.";
+                    break;
+            }
+
+            detail += string.Format("\r\n\r\nSQL {0}, estado {1}.", sql.Number, sql.State);
+        }
+        else if (error is ArgumentException || error is InvalidOperationException)
+        {
+            detail = "Confira AIRBPG_SQL_CONNECTION ou execute INICIAR.cmd para preparar a conexão.";
+        }
+        else
+        {
+            detail = "Falha inesperada durante o acesso (" + error.GetType().Name + ").";
+        }
+
+        _message.Text = "Falha de acesso. Verifique a configuração e tente novamente.";
+        MessageBox.Show(this, detail, "aiRbPG — Diagnóstico de acesso", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+
 
     private async void SignInAsync(object sender, EventArgs e)
     {
@@ -171,9 +216,9 @@ public sealed class LoginForm : Form
             DialogResult = DialogResult.OK;
             Close();
         }
-        catch (Exception)
+        catch (Exception error)
         {
-            _message.Text = "Falha ao entrar. Confira a conexão com o banco de dados.";
+            ShowAccessError(error);
         }
         finally
         {

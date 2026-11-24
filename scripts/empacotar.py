@@ -44,7 +44,7 @@ copy(root.parent/'referencias/Trabalho 2 Sem 2026 - Mat - LPVIII.pdf','Referenci
 copy(root.parent/'referencias/instrucoes-plataforma.png','Referencias/instrucoes-plataforma.png')
 copy(root.parent/'.revisao/testes/testes-debug.txt','Verificacoes/testes-debug.txt')
 copy(root.parent/'.revisao/testes/build-ide-vs2015.txt','Verificacoes/build-ide-vs2015.txt')
-write('INICIAR.cmd','@echo off\npowershell.exe -NoProfile -File "%~dp0CodigoFonte\\scripts\\iniciar.ps1"\nif errorlevel 1 pause\n')
+write('INICIAR.cmd','@echo off\npowershell.exe -NoProfile -File "%~dp0CodigoFonte\\scripts\\iniciar.ps1" -AplicativoCompilado\nif errorlevel 1 pause\n')
 write('CONFIGURAR-BANCO.cmd','@echo off\npowershell.exe -NoProfile -File "%~dp0CodigoFonte\\scripts\\configurar-banco.ps1"\npause\n')
 write('ABRIR-PROJETO.cmd','@echo off\nif exist "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe" (\n start "" "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\Common7\\IDE\\devenv.exe" "%~dp0CodigoFonte\\aiRbPG.sln"\n) else (\n start "" "%~dp0CodigoFonte\\aiRbPG.sln"\n)\n')
 write('LEIA-ME.txt', '''aiRbPG - Linguagem de Programação VIII
